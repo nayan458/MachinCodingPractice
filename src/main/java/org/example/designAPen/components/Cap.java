@@ -15,4 +15,9 @@ public class Cap implements Clonable<Cap> {
     public Cap cloneObject(){
         return new Cap(this.meterial, this.radius);
     }
+
+    @Override
+    public String toString() {
+        return "Cap [meterial=" + meterial + ", radius=" + radius + "]";
+    }
 }

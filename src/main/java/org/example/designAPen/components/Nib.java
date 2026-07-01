@@ -16,4 +16,9 @@ public class Nib implements Clonable<Nib>{
     public Nib cloneObject(){
         return new Nib(this.penType, this.compatibilityRadius);
     }
+
+    @Override
+    public String toString() {
+        return "Nib [penType=" + penType + ", compatibilityRadius=" + compatibilityRadius + "]";
+    }
 }

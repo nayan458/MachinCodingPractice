@@ -33,4 +33,9 @@ public class Refill implements Clonable<Refill> {
     public Refill cloneObject(){
         return new Refill(this);
     }
+
+    @Override
+    public String toString() {
+        return "Refill [radius=" + radius + ", nib=" + nib + ", color=" + color + ", penType=" + penType + "]";
+    }
 }

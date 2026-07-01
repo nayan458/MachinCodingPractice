@@ -19,4 +19,9 @@ public class Body implements Clonable<Body> {
     public Body cloneObject(){
         return new Body(this.color, this.meterial, this.radius, this.penType);
     }
+
+    @Override
+    public String toString() {
+        return "Body [color=" + color + ", meterial=" + meterial + ", radius=" + radius + ", penType=" + penType + "]";
+    }
 }

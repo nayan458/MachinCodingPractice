@@ -24,7 +24,10 @@ public class GellPen extends Pen {
         return new GellPen(this.getBody(), this.getState(), this.getBrand(), this.refill, this.getPrice());
     }
 
-    public static GellPenBuilder builder() { return new GellPenBuilder(); }
+    @Override
+    public String toString() {
+        return "GellPen [refill=" + refill + ", brand=" + getBrand() + ", price=" + getPrice() + ", state=" + getState() + "]";
+    }
 
     public static class GellPenBuilder implements Builder<GellPen>{
         private Body body;

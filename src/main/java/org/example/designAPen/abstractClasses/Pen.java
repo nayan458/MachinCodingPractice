@@ -26,10 +26,12 @@ public abstract class Pen implements Clonable<Pen>{
 
     public void open() {
         state = PenState.OPEN;
+        System.out.println("Pen is opened");
     }
 
     public void close() {
         state = PenState.CLOSED;
+        System.out.println("Pen is closed");
     }
 
     // private void Action(Action action) {
@@ -47,4 +49,10 @@ public abstract class Pen implements Clonable<Pen>{
             throw new IllegalArgumentException();
         this.price = newPrice;
     }
+
+    @Override
+    public String toString() {
+        return "Pen [brand=" + brand + ", price=" + price + ", state=" + state + "]";
+    }
+
 }

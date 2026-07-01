@@ -30,7 +30,10 @@ public class BallPen extends Pen {
     @Override
     public BallPen cloneObject(){ return new BallPen(this); }
 
-    public static BallPenBuilder builder() { return new BallPenBuilder(); };
+    @Override
+    public String toString() {
+        return "BallPen [refill=" + refill + ", brand=" + getBrand() + ", price=" + getPrice() + ", state=" + getState() + "]";
+    }
 
     public static class BallPenBuilder implements Builder<BallPen>{
         private Body body;

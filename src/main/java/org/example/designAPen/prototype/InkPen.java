@@ -24,7 +24,10 @@ public class InkPen extends Pen {
         return new InkPen(this.getBody(), this.getState(), this.getBrand(), this.refill, this.getPrice());
     }
 
-    public static InkPenBuilder builder() { return new InkPenBuilder(); }
+    @Override
+    public String toString() {
+        return "InkPen [refill=" + refill + ", brand=" + getBrand() + ", price=" + getPrice() + ", state=" + getState() + "]";
+    }
 
     public static class InkPenBuilder implements Builder<InkPen>{
         private Body body;

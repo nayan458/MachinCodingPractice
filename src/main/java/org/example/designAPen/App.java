@@ -12,13 +12,12 @@ import org.example.designAPen.types.PenType;
 
 public class App 
 {
-    private static PenNibRegistery penNibRegistery = new PenNibRegistery();
-    private static PenRefillRegistery penRefillRegistery = new PenRefillRegistery();
-    private static PenBodyRegistery penBodyRegistery = new PenBodyRegistery();
-    private static PenRegistery penRegistery = new PenRegistery();
+    private static final PenNibRegistery penNibRegistery = new PenNibRegistery();
+    private static final PenRefillRegistery penRefillRegistery = new PenRefillRegistery();
+    private static final PenBodyRegistery penBodyRegistery = new PenBodyRegistery();
+    private static final PenRegistery penRegistery = new PenRegistery();
 
     public static void main( String[] args ) {
-        
 
         try {
             Bootstrap app = new Bootstrap.BootstrapBuilder()
@@ -37,6 +36,8 @@ public class App
         try {
             Pen celloMaxWriter = new PenFactory(penRegistery).createPen(PenType.BALL);
             celloMaxWriter.setPrice(10.0);
+
+            System.out.println(celloMaxWriter);
             celloMaxWriter.open();
             celloMaxWriter.write("Hello world\n");
         } catch (ClosedPenException e) {
