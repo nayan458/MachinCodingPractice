@@ -5,7 +5,7 @@ import org.example.designAPen.registery.PenRegistery;
 import org.example.designAPen.types.PenType;
 
 public class PenFactory {
-    private PenRegistery penRegistery;
+    private final PenRegistery penRegistery;
 
     public PenFactory(PenRegistery penRegistery) { this.penRegistery = penRegistery; }
 

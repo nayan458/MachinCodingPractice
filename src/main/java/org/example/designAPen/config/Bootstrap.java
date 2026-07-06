@@ -8,10 +8,10 @@ import org.example.genericUtils.interfaces.Module;
 
 public class Bootstrap implements Module {
     
-    private PenNibRegistery penNibRegistery;
-    private PenRefillRegistery penRefillRegistery;
-    private PenBodyRegistery penBodyRegistery;
-    private PenRegistery penRegistery;
+    private final PenNibRegistery penNibRegistery;
+    private final PenRefillRegistery penRefillRegistery;
+    private final PenBodyRegistery penBodyRegistery;
+    private final PenRegistery penRegistery;
 
     private Bootstrap(PenNibRegistery penNibRegistery,PenRefillRegistery penRefillRegistery,PenBodyRegistery penBodyRegistery,PenRegistery penRegistery) {
         this.penNibRegistery = penNibRegistery;
