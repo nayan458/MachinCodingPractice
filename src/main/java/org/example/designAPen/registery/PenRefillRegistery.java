@@ -5,9 +5,9 @@ import java.util.Map;
 
 import org.example.designAPen.components.Refill;
 import org.example.designAPen.types.PenType;
-import org.example.genericUtils.interfaces.Registery;
+import org.example.genericUtils.interfaces.Registry;
 
-public class PenRefillRegistery implements Registery<PenType, Refill>{
+public class PenRefillRegistery implements Registry<PenType, Refill>{
 
     private final Map<PenType, Refill> registery = new HashMap<>();
 

@@ -25,6 +25,8 @@ public class Game {
         this.players = players;
         this.dice = dice;
         this.currentPlayerIndex = 0;
+        // initialize players on board
+        this.board.initPlayers(players);
         this.status = GameStatus.ON_PROGRESS;
     }
 

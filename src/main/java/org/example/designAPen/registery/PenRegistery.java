@@ -5,10 +5,10 @@ import java.util.Map;
 
 import org.example.designAPen.abstractClasses.Pen;
 import org.example.designAPen.types.PenType;
-import org.example.genericUtils.interfaces.Registery;
+import org.example.genericUtils.interfaces.Registry;
 
 
-public class PenRegistery implements Registery<PenType, Pen> {
+public class PenRegistery implements Registry<PenType, Pen> {
 
     private final Map<PenType, Pen> registery = new HashMap<>();
 

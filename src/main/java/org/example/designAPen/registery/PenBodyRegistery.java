@@ -5,9 +5,9 @@ import java.util.Map;
 
 import org.example.designAPen.components.Body;
 import org.example.designAPen.types.MeterialType;
-import org.example.genericUtils.interfaces.Registery;
+import org.example.genericUtils.interfaces.Registry;
 
-public class PenBodyRegistery implements Registery<MeterialType, Body> {
+public class PenBodyRegistery implements Registry<MeterialType, Body> {
     private final Map<MeterialType, Body> registery = new HashMap<>();
 
     @Override
