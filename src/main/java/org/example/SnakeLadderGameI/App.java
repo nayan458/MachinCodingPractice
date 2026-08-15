@@ -41,7 +41,7 @@ public class App {
         GameController controller = new GameController(service);
 
         // Run a small number of moves to demonstrate play
-        for (int i = 0; i < 20; i++) {
+        while (!controller.isGameOver(game)) {
             controller.makeMove(game);
             try {
                 Thread.sleep(200);

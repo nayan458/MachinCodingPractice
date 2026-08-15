@@ -16,6 +16,7 @@ public class Board {
     private final Map<Integer, Cell> cells = new LinkedHashMap<>();
     private final Map<Integer, Integer> jumps = new HashMap<>();
     private final Map<Player, Cell> players = new LinkedHashMap<>();
+    private boolean isGameOver = false;
 
     protected Board(int size, Map<Integer, Integer> jumps) {
         this.size = size;
@@ -26,6 +27,8 @@ public class Board {
     }
 
     public int getSize() { return size; }
+
+    public boolean isGameOver() { return isGameOver; }
 
     public Map<Integer, Integer> getJumps() { return new HashMap<>(jumps); }
 
@@ -50,6 +53,9 @@ public class Board {
             nextCell = jumps.get(nextCell);
 
         players.put(currentPlayer, cells.get(nextCell));
+
+        if(nextCell == size)
+            isGameOver = true;
     }
 
     @Override
@@ -93,7 +99,7 @@ public class Board {
                     cellLabel.append(" (").append(playersHere).append(")");
 
                 // fixed width formatting
-                b.append(String.format("[% -12s]", cellLabel.toString()));
+                b.append(String.format("[%-12s]", cellLabel.toString()));
             }
             b.append(System.lineSeparator());
         }

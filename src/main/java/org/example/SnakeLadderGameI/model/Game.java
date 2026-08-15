@@ -32,6 +32,10 @@ public class Game {
 
     public void makeMove(Move move) {
         board.apply(move);
+        if(board.isGameOver()){
+            this.status = GameStatus.ENDED;
+            this.winner = move.getPlayer();
+        }
     }
 
     public void advanceTurn() {
@@ -44,10 +48,6 @@ public class Game {
 
     public Player getNextPlayer() {
         return players.get(currentPlayerIndex);
-    }
-
-    public void move() {
-
     }
 
     public Player getWinner() throws GameNotEndedException {

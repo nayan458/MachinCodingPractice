@@ -1,7 +1,7 @@
 package org.example.SnakeLadderGameI.model;
 
 import org.example.SnakeLadderGameI.abstractModel.Player;
-import org.example.TicTacToe.Exceptions.IllegalMoveException;
+import org.example.SnakeLadderGameI.exception.IllegalMoveException;
 
 import lombok.Getter;
 

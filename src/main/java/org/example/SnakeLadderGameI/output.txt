@@ -973,3 +973,829 @@ public interface BotPlayingStrategy {
     
 }
 
+===== ./util/RandomUtil.java =====
+package org.example.SnakeLadderGameI.util;
+
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+
+public final class RandomUtil {
+
+    private RandomUtil() {
+    }
+
+    public static int randomInt(int min, int max) {
+        return ThreadLocalRandom.current().nextInt(min, max + 1);
+    }
+
+    public static boolean randomBoolean() {
+        return ThreadLocalRandom.current().nextBoolean();
+    }
+
+    public static double randomDouble(double min, double max) {
+        return ThreadLocalRandom.current().nextDouble(min, max);
+    }
+
+    public static <T> T randomElement(List<T> list) {
+        if (list.isEmpty())
+            throw new IllegalArgumentException("List cannot be empty");
+
+        return list.get(randomInt(0, list.size() - 1));
+    }
+}
+
+===== ./controller/GameController.java =====
+package org.example.SnakeLadderGameI.controller;
+
+import org.example.SnakeLadderGameI.abstractModel.Player;
+import org.example.SnakeLadderGameI.model.Game;
+import org.example.SnakeLadderGameI.model.Move;
+import org.example.SnakeLadderGameI.service.GameService;
+import org.example.SnakeLadderGameI.type.GameStatus;
+import org.example.SnakeLadderGameI.type.PlayerType;
+
+public class GameController {
+    private GameService gameService;
+    private static final java.util.Scanner INPUT = new java.util.Scanner(System.in);
+
+    public GameController(GameService gameService) {
+        this.gameService = gameService;
+    }
+
+    public boolean isGameOver(Game game) {
+        return gameService.getGameStatus(game) == GameStatus.ENDED;
+    }
+
+    public void makeMove(Game game) {
+        Player next = gameService.getNextPlayer(game);
+
+        if (next.getType() == PlayerType.HUMAN) {
+            System.out.println("It's " + next.getName() + "'s turn. Please hit ENTER to roll the dice.");
+            try {
+                INPUT.nextLine();
+            } catch (Exception e) {
+                // ignore input issues and continue
+            }
+        }
+
+        try {
+            Move move = next.makeMove(game.getDice());
+            game.makeMove(move);
+            game.advanceTurn();
+        } catch (Exception e) {
+            System.out.println("Error making move: " + e.getMessage());
+        }
+
+        gameService.displayBoard(game);
+        if(gameService.getGameStatus(game) == GameStatus.ENDED) {
+            try {
+                System.out.println("The winner is " + gameService.getWinner(game).getName());
+            } catch (Exception e) {
+                System.out.print(e);
+            }
+        }
+    }
+
+}
+
+
+===== ./README.md =====
+Q1. Snake & Ladder Game Class Diagram - 1
+
+Design a class diagram for the traditional game of Snake and Ladder with the following requirements:
+
+Board: A standard Snake and Ladder board contains 100 cells numbered from 1 to 100.
+Players: The game can be played by 2-4 players.
+Dice: The game will have a standard dice that can roll numbers between 1 to 6.
+Snakes: Snakes will have a start point (mouth) and an endpoint (tail). If a player lands on the mouth, they are taken down to the tail.
+Ladders: Ladders will have a start point (bottom) and an endpoint (top). If a player lands on the bottom, they climb up to the top.
+Turns: Players take turns in a round-robin fashion to roll the dice and move.
+Winning Condition: A player wins if they land on the 100th cell exactly. For example, if a player is on the 99th cell, they must roll a 1 to win.
+
+
+
+===== ./abstractModel/Player.java =====
+package org.example.SnakeLadderGameI.abstractModel;
+
+import org.example.SnakeLadderGameI.model.Dice;
+import org.example.SnakeLadderGameI.model.Move;
+import org.example.SnakeLadderGameI.model.Symbol;
+import org.example.SnakeLadderGameI.type.PlayerType;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@AllArgsConstructor
+@Getter
+public abstract class Player {
+    private final String name;
+    private final Symbol symbol;
+    private final PlayerType type;
+
+    public abstract Move makeMove(Dice dice);
+}
+
+
+===== ./abstractModel/Board.java =====
+package org.example.SnakeLadderGameI.abstractModel;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import org.example.SnakeLadderGameI.model.Cell;
+import org.example.SnakeLadderGameI.model.Move;
+
+public class Board {
+    private final int size;
+    private final Map<Integer, Cell> cells = new LinkedHashMap<>();
+    private final Map<Integer, Integer> jumps = new HashMap<>();
+    private final Map<Player, Cell> players = new LinkedHashMap<>();
+    private boolean isGameOver = false;
+
+    protected Board(int size, Map<Integer, Integer> jumps) {
+        this.size = size;
+        for (int i = 1; i <= size; i++)
+            cells.put(i, new Cell(i));
+        if (jumps != null)
+            this.jumps.putAll(jumps);
+    }
+
+    public int getSize() { return size; }
+
+    public boolean isGameOver() { return isGameOver; }
+
+    public Map<Integer, Integer> getJumps() { return new HashMap<>(jumps); }
+
+    public void initPlayers(List<Player> playersList) {
+        players.clear();
+        Cell start = cells.get(1);
+        for (Player p : playersList)
+            players.put(p, start);
+    }
+
+    public void apply(Move move) {
+        Player currentPlayer = move.getPlayer();
+        Cell cur = players.get(currentPlayer);
+        if (cur == null)
+            return;
+        int currentCell = cur.getNumber();
+        int nextCell = currentCell + move.getDiceValue();
+        if (nextCell > size)
+            return;
+
+        if (jumps.containsKey(nextCell))
+            nextCell = jumps.get(nextCell);
+
+        players.put(currentPlayer, cells.get(nextCell));
+
+        if(nextCell == size)
+            isGameOver = true;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder();
+
+        int width = Math.min(10, size);
+        List<Integer> indices = new ArrayList<>(cells.keySet());
+
+        // Build reverse rows from top to bottom
+        for (int rowStart = size; rowStart > 0; rowStart -= width) {
+            int rowEnd = Math.max(1, rowStart - width + 1);
+            List<Integer> row = indices.subList(rowEnd - 1, rowStart).stream()
+                    .map(Integer::valueOf)
+                    .collect(Collectors.toList());
+
+            // snake-like ordering: reverse every other row (so the board zig-zags)
+            int rowNumber = (rowEnd - 1) / width; // zero-based
+            if ((rowNumber & 1) == 0)
+                java.util.Collections.reverse(row);
+
+            for (Integer cellNum : row) {
+                StringBuilder cellLabel = new StringBuilder();
+                cellLabel.append(cellNum);
+
+                if (jumps.containsKey(cellNum)) {
+                    int target = jumps.get(cellNum);
+                    if (target < cellNum)
+                        cellLabel.append(" S->").append(target);
+                    else
+                        cellLabel.append(" L->").append(target);
+                }
+
+                // players on this cell
+                String playersHere = players.entrySet().stream()
+                        .filter(e -> Objects.equals(e.getValue().getNumber(), cellNum))
+                        .map(e -> e.getKey().getSymbol().toString())
+                        .collect(Collectors.joining(""));
+
+                if (!playersHere.isEmpty())
+                    cellLabel.append(" (").append(playersHere).append(")");
+
+                // fixed width formatting
+                b.append(String.format("[%-12s]", cellLabel.toString()));
+            }
+            b.append(System.lineSeparator());
+        }
+
+        return b.toString();
+    }
+
+}
+
+
+===== ./type/BoardType.java =====
+package org.example.SnakeLadderGameI.type;
+
+public enum BoardType {
+    EASY,
+    STANDARD,
+    HARD,
+}
+
+
+===== ./type/BotPlayingDifficulty.java =====
+package org.example.SnakeLadderGameI.type;
+
+public enum BotPlayingDifficulty {
+    EASY,
+    MEDIUM,
+    HARD
+}
+
+
+===== ./type/PlayerType.java =====
+package org.example.SnakeLadderGameI.type;
+
+public enum PlayerType {
+    HUMAN,
+    BOT
+}
+
+
+===== ./type/GameStatus.java =====
+package org.example.SnakeLadderGameI.type;
+
+public enum GameStatus {
+    INITIALIZING,
+    ON_PROGRESS,
+    ENDED
+}
+
+
+===== ./model/Dice.java =====
+package org.example.SnakeLadderGameI.model;
+
+import org.example.SnakeLadderGameI.util.RandomUtil;
+
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
+public class Dice {
+    private int side;
+    
+    public int roll() {
+        return RandomUtil.randomInt(1, side);
+    }
+}
+
+===== ./model/Human.java =====
+package org.example.SnakeLadderGameI.model;
+
+import org.example.SnakeLadderGameI.abstractModel.Player;
+import org.example.SnakeLadderGameI.type.PlayerType;
+
+public class Human extends Player {
+
+    private Human(String name, PlayerType type, Symbol symbol) {
+        super(name, symbol, type);
+    }
+
+    @Override
+    public Move makeMove(Dice dice) {
+        try {
+            return new Move(this, dice.roll());
+        } catch (Exception e) {
+            System.out.println("Error while making move: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public static class HumanBuilder{
+        private String name;
+        private PlayerType type;
+        private Symbol symbol;
+
+        public HumanBuilder setname (String name){
+            this.name = name; return this;
+        }
+        public HumanBuilder settype (PlayerType type){
+            this.type = type; return this;
+        }
+        public HumanBuilder setsymbol (Symbol symbol){
+            this.symbol = symbol; return this;
+        }
+
+        public Human build(){
+            if(
+                name == null ||
+                type == null ||
+                symbol == null
+            ) throw new IllegalArgumentException();
+            return new Human(name, type, symbol);
+        }
+    }
+}
+
+
+===== ./model/Symbol.java =====
+package org.example.SnakeLadderGameI.model;
+
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
+public class Symbol {
+    private String ch;
+
+    @Override
+    public String toString(){
+        return ch;
+    }
+}
+
+
+===== ./model/Game.java =====
+package org.example.SnakeLadderGameI.model;
+
+import java.util.Collections;
+import java.util.List;
+
+import org.example.SnakeLadderGameI.abstractModel.Board;
+import org.example.SnakeLadderGameI.abstractModel.Player;
+import org.example.SnakeLadderGameI.exception.GameNotEndedException;
+import org.example.SnakeLadderGameI.registery.BoardRegistery.BoardRegistry;
+import org.example.SnakeLadderGameI.type.BoardType;
+import org.example.SnakeLadderGameI.type.GameStatus;
+
+public class Game {
+    private final Board board;
+    private final List<Player> players;
+    private final Dice dice;
+    private Integer currentPlayerIndex;
+    
+    private GameStatus status;
+    private Player winner;
+
+    private Game(Board board, List<Player> players, Dice dice){
+        this.status = GameStatus.INITIALIZING;
+        this.board = board;
+        this.players = players;
+        this.dice = dice;
+        this.currentPlayerIndex = 0;
+        // initialize players on board
+        this.board.initPlayers(players);
+        this.status = GameStatus.ON_PROGRESS;
+    }
+
+    public void makeMove(Move move) {
+        board.apply(move);
+        if(board.isGameOver()){
+            this.status = GameStatus.ENDED;
+            this.winner = move.getPlayer();
+        }
+    }
+
+    public void advanceTurn() {
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+    }
+
+    public Dice getDice() {
+        return this.dice;
+    }
+
+    public Player getNextPlayer() {
+        return players.get(currentPlayerIndex);
+    }
+
+    public Player getWinner() throws GameNotEndedException {
+        if(status != GameStatus.ENDED)
+            throw new GameNotEndedException();
+        return winner;
+    }
+
+    public GameStatus getGameStatus() { return this.status; }
+
+    public void displayBoard() { System.out.println(board); }
+
+    public static class GameBuilder {
+        private List<Player> players;
+        private BoardType type;
+        private Dice dice;
+
+        public GameBuilder setPlayers(List<Player> players) { this.players = players; return this; }
+
+        public GameBuilder standard(){ this.type = BoardType.STANDARD; return this; }
+        public GameBuilder easy(){ this.type = BoardType.EASY; return this; }
+        public GameBuilder hard(){ this.type = BoardType.HARD; return this; }
+
+        public GameBuilder setDice(Dice dice) { this.dice = dice; return this; }
+
+        public Game build() {
+            Collections.shuffle(players);
+            return new Game(BoardRegistry.getInstance().getItem(type) , players, dice);
+        }
+
+    }
+}
+
+
+===== ./model/Bot.java =====
+package org.example.SnakeLadderGameI.model;
+
+import org.example.SnakeLadderGameI.abstractModel.Player;
+import org.example.SnakeLadderGameI.type.PlayerType;
+
+public class Bot extends Player {
+
+    private Bot(String name, PlayerType type, Symbol symbol){
+        super(name, symbol, type);
+    }
+
+    @Override
+    public Move makeMove(Dice dice) {
+        try {
+            return new Move(this, dice.roll());   
+        } catch (Exception e) {
+            System.out.println("Error while making move: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public static class BotBuilder {
+        private String name;
+        private PlayerType type; 
+        private Symbol symbol; 
+
+        public BotBuilder setName(String name){ this.name = name; return this; }
+        public BotBuilder setType(PlayerType type){ this.type = type ; return this; }
+        public BotBuilder setSymbol(Symbol symbol){ this.symbol = symbol ; return this; }
+
+        public Bot build(){
+            if(
+                name == null ||
+                type == null ||
+                symbol == null
+                )
+                throw new IllegalArgumentException("Please set all the values before proceeding forward");
+            return new Bot(name, type, symbol);
+        }
+    }
+
+}
+
+
+===== ./model/Move.java =====
+package org.example.SnakeLadderGameI.model;
+
+import org.example.SnakeLadderGameI.abstractModel.Player;
+import org.example.SnakeLadderGameI.exception.IllegalMoveException;
+
+import lombok.Getter;
+
+@Getter
+public class Move {
+    private Player player;
+    private int diceValue;
+
+    public Move (Player player, int diceValue) throws IllegalMoveException {
+        if(diceValue < 0)
+            throw new IllegalMoveException();
+        this.player = player;
+        this.diceValue = diceValue;
+    }
+}
+
+
+===== ./model/Cell.java =====
+package org.example.SnakeLadderGameI.model;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@AllArgsConstructor
+@Getter
+public class Cell {
+    private int number;
+}
+
+
+===== ./App.java =====
+package org.example.SnakeLadderGameI;
+
+import java.util.Arrays;
+import java.util.List;
+
+import org.example.SnakeLadderGameI.abstractModel.Player;
+import org.example.SnakeLadderGameI.controller.GameController;
+import org.example.SnakeLadderGameI.model.Bot;
+import org.example.SnakeLadderGameI.model.Dice;
+import org.example.SnakeLadderGameI.model.Game;
+import org.example.SnakeLadderGameI.model.Human;
+import org.example.SnakeLadderGameI.model.Symbol;
+import org.example.SnakeLadderGameI.service.GameService;
+import org.example.SnakeLadderGameI.type.PlayerType;
+
+public class App {
+    public static void main(String[] args) {
+        Dice dice = new Dice(6);
+
+        Human h = new Human.HumanBuilder()
+                .setname("Alice")
+                .settype(PlayerType.HUMAN)
+                .setsymbol(new Symbol("A"))
+                .build();
+
+        Bot b = new Bot.BotBuilder()
+                .setName("Bot")
+                .setType(PlayerType.BOT)
+                .setSymbol(new Symbol("B"))
+                .build();
+
+        List<Player> players = Arrays.asList(h, b);
+
+        Game game = new Game.GameBuilder()
+                .setPlayers(players)
+                .standard()
+                .setDice(dice)
+                .build();
+
+        GameService service = new GameService();
+        GameController controller = new GameController(service);
+
+        // Run a small number of moves to demonstrate play
+        while (!controller.isGameOver(game)) {
+            controller.makeMove(game);
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+    }
+}
+
+===== ./service/GameService.java =====
+package org.example.SnakeLadderGameI.service;
+
+import org.example.SnakeLadderGameI.abstractModel.Player;
+import org.example.SnakeLadderGameI.exception.GameNotEndedException;
+import org.example.SnakeLadderGameI.model.Game;
+import org.example.SnakeLadderGameI.model.Move;
+import org.example.SnakeLadderGameI.type.GameStatus;
+
+public class GameService {
+
+    public Player getNextPlayer(Game game) { return game.getNextPlayer(); }
+
+    public void makeMove(Game game) {
+        Move move = game.getNextPlayer().makeMove(game.getDice());
+        game.makeMove(move);
+        game.advanceTurn();
+    }
+
+    public Player getWinner(Game game) throws GameNotEndedException { return game.getWinner(); }
+
+    public void displayBoard(Game game) { game.displayBoard(); }
+
+    public GameStatus getGameStatus(Game game) { return game.getGameStatus(); }
+
+}
+
+
+===== ./exception/GameNotEndedException.java =====
+package org.example.SnakeLadderGameI.exception;
+
+public class GameNotEndedException extends Exception {
+    public GameNotEndedException() {
+        super("Game not ended");
+    }
+
+    public GameNotEndedException(String message) {
+        super(message);
+    }
+}
+
+
+===== ./exception/IllegalMoveException.java =====
+package org.example.SnakeLadderGameI.exception;
+
+public class IllegalMoveException extends Exception {
+    public IllegalMoveException() {
+        super("Illegal Move");
+    }
+
+    public IllegalMoveException(String message) {
+        super(message);
+    }
+}
+
+
+===== ./output.txt =====
+
+
+===== ./registery/SymbolAllocator.java =====
+package org.example.SnakeLadderGameI.registery;
+
+public class SymbolAllocator {
+    
+}
+
+
+===== ./registery/BoardRegistery/StandardBoard.java =====
+package org.example.SnakeLadderGameI.registery.BoardRegistery;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import org.example.SnakeLadderGameI.abstractModel.Board;
+import org.example.SnakeLadderGameI.util.RandomUtil;
+
+public class StandardBoard extends Board {
+    public StandardBoard() {
+        super(100, buildJumps(100, 6, 4));
+    }
+
+    private static Map<Integer, Integer> buildJumps(int size, int snakes, int ladders) {
+        Map<Integer, Integer> j = new HashMap<>();
+        Set<Integer> used = new HashSet<>();
+
+        for (int i = 0; i < ladders; i++) {
+            int start, end;
+            do {
+                start = RandomUtil.randomInt(2, size - 2);
+                end = RandomUtil.randomInt(start + 1, size - 1);
+            } while (used.contains(start) || used.contains(end));
+            used.add(start); used.add(end);
+            j.put(start, end);
+        }
+
+        for (int i = 0; i < snakes; i++) {
+            int start, end;
+            do {
+                start = RandomUtil.randomInt(3, size - 1);
+                end = RandomUtil.randomInt(2, start - 1);
+            } while (used.contains(start) || used.contains(end));
+            used.add(start); used.add(end);
+            j.put(start, end);
+        }
+
+        return j;
+    }
+}
+
+
+===== ./registery/BoardRegistery/BoardRegistry.java =====
+package org.example.SnakeLadderGameI.registery.BoardRegistery;
+
+import java.util.HashMap;
+
+import org.example.SnakeLadderGameI.abstractModel.Board;
+import org.example.SnakeLadderGameI.type.BoardType;
+
+public class BoardRegistry {
+
+    private final HashMap<BoardType, Board> REGISTRY = new HashMap<>();
+    private static volatile BoardRegistry INSTANCE;
+
+    private BoardRegistry() {
+        REGISTRY.put(BoardType.EASY, new EasyBoard());
+        REGISTRY.put(BoardType.STANDARD, new StandardBoard());
+        REGISTRY.put(BoardType.HARD, new HardBoard());
+    }
+
+    public static BoardRegistry getInstance() {
+        if(BoardRegistry.INSTANCE == null){
+            synchronized(BoardRegistry.class) {
+                if(INSTANCE == null)
+                    INSTANCE = new BoardRegistry();
+            }
+        }
+        return INSTANCE;
+    }
+
+    public void add(BoardType key, Board value) {
+        REGISTRY.put(key, value);
+    }
+
+    public void remove(BoardType key) {
+        REGISTRY.remove(key);
+    }
+
+    public Board getItem(BoardType key) {
+        if(REGISTRY.containsKey(key))
+            return REGISTRY.get(key);
+        return REGISTRY.get(key);
+    }
+}
+
+
+===== ./registery/BoardRegistery/HardBoard.java =====
+package org.example.SnakeLadderGameI.registery.BoardRegistery;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import org.example.SnakeLadderGameI.abstractModel.Board;
+import org.example.SnakeLadderGameI.util.RandomUtil;
+
+public class HardBoard extends Board {
+	public HardBoard() {
+		super(100, buildJumps(100, 12, 2));
+	}
+
+	private static Map<Integer, Integer> buildJumps(int size, int snakes, int ladders) {
+		Map<Integer, Integer> j = new HashMap<>();
+		Set<Integer> used = new HashSet<>();
+
+		for (int i = 0; i < ladders; i++) {
+			int start, end;
+			do {
+				start = RandomUtil.randomInt(2, size - 2);
+				end = RandomUtil.randomInt(start + 1, size - 1);
+			} while (used.contains(start) || used.contains(end));
+			used.add(start); used.add(end);
+			j.put(start, end);
+		}
+
+		for (int i = 0; i < snakes; i++) {
+			int start, end;
+			do {
+				start = RandomUtil.randomInt(3, size - 1);
+				end = RandomUtil.randomInt(2, start - 1);
+			} while (used.contains(start) || used.contains(end));
+			used.add(start); used.add(end);
+			j.put(start, end);
+		}
+
+		return j;
+	}
+}
+
+
+===== ./registery/BoardRegistery/EasyBoard.java =====
+package org.example.SnakeLadderGameI.registery.BoardRegistery;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import org.example.SnakeLadderGameI.abstractModel.Board;
+import org.example.SnakeLadderGameI.util.RandomUtil;
+
+public class EasyBoard extends Board {
+	public EasyBoard() {
+		super(30, buildJumps(30, 2, 6));
+	}
+
+	private static Map<Integer, Integer> buildJumps(int size, int snakes, int ladders) {
+		Map<Integer, Integer> j = new HashMap<>();
+		Set<Integer> used = new HashSet<>();
+
+		// ladders: start < end
+		for (int i = 0; i < ladders; i++) {
+			int start, end;
+			do {
+				start = RandomUtil.randomInt(2, size - 2);
+				end = RandomUtil.randomInt(start + 1, size - 1);
+			} while (used.contains(start) || used.contains(end));
+			used.add(start); used.add(end);
+			j.put(start, end);
+		}
+
+		// snakes: start > end
+		for (int i = 0; i < snakes; i++) {
+			int start, end;
+			do {
+				start = RandomUtil.randomInt(3, size - 1);
+				end = RandomUtil.randomInt(2, start - 1);
+			} while (used.contains(start) || used.contains(end));
+			used.add(start); used.add(end);
+			j.put(start, end);
+		}
+
+		return j;
+	}
+}
+
+

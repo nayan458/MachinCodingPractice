@@ -1,11 +1,10 @@
 package org.example.SnakeLadderGameI.controller;
 
-import java.util.Scanner;
-
 import org.example.SnakeLadderGameI.abstractModel.Player;
 import org.example.SnakeLadderGameI.model.Game;
 import org.example.SnakeLadderGameI.model.Move;
 import org.example.SnakeLadderGameI.service.GameService;
+import org.example.SnakeLadderGameI.type.GameStatus;
 import org.example.SnakeLadderGameI.type.PlayerType;
 
 public class GameController {
@@ -14,6 +13,10 @@ public class GameController {
 
     public GameController(GameService gameService) {
         this.gameService = gameService;
+    }
+
+    public boolean isGameOver(Game game) {
+        return gameService.getGameStatus(game) == GameStatus.ENDED;
     }
 
     public void makeMove(Game game) {
@@ -37,6 +40,13 @@ public class GameController {
         }
 
         gameService.displayBoard(game);
+        if(gameService.getGameStatus(game) == GameStatus.ENDED) {
+            try {
+                System.out.println("The winner is " + gameService.getWinner(game).getName());
+            } catch (Exception e) {
+                System.out.print(e);
+            }
+        }
     }
 
 }
