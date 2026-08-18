@@ -1,0 +1,198 @@
+===== ./README.md =====
+Q2. Design Class Diagram for Chess Game
+
+Create a representation for the chessboard.
+Represent all the pieces: King, Queen, Bishop, Knight, Rook, and Pawn.
+Differentiate the pieces based on color: Black and White.
+Each piece should have a method to determine its legal moves based on its current position.
+The chessboard should have a method to move a piece from one position to another.
+There should be a way to check the status of the game, e.g., ongoing, check, checkmate, or stalemate.
+The game should support special moves: castling, pawn promotion, and en passant.
+Implement a player class, where each player has a color and a set of pieces.
+Include a game class that will handle turn-based gameplay between two players.
+The game should have a method to capture and remove a piece from the board.
+
+
+
+===== ./type/PieceType.java =====
+package org.example.ChessGame.type;
+
+public enum PieceType {
+    KING,
+    QUEEN,
+    PAWN,
+    KNIGHT,
+    BISHOP,
+    ROOK,
+}
+
+
+===== ./type/Color.java =====
+package org.example.ChessGame.type;
+
+public enum Color {
+    BLACK,
+    WHITE
+}
+
+
+===== ./model/board/Board.java =====
+package org.example.ChessGame.model.board;
+
+public class Board {
+    
+}
+
+
+===== ./model/board/Cell.java =====
+package org.example.ChessGame.model.board;
+
+public class Cell {
+    
+}
+
+
+===== ./model/game/Game.java =====
+
+
+===== ./model/piece/Knight.java =====
+package org.example.ChessGame.model.piece;
+
+public class Knight {
+    
+}
+
+
+===== ./model/piece/Rook.java =====
+package org.example.ChessGame.model.piece;
+
+public class Rook {
+    
+}
+
+
+===== ./model/piece/Bishop.java =====
+package org.example.ChessGame.model.piece;
+
+public class Bishop {
+    
+}
+
+
+===== ./model/piece/Queen.java =====
+package org.example.ChessGame.model.piece;
+
+public class Queen {
+    
+}
+
+
+===== ./model/piece/King.java =====
+package org.example.ChessGame.model.piece;
+
+public class King {
+    
+}
+
+
+===== ./model/piece/Piece.java =====
+package org.example.ChessGame.model.piece;
+
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.PieceType;
+
+public abstract class Piece {
+    private PieceType type;
+    private Color color;
+
+    public abstract void move(String from, String to);
+}
+
+
+===== ./model/piece/Pawn.java =====
+package org.example.ChessGame.model.piece;
+
+public class Pawn {
+    
+}
+
+
+===== ./model/player/Player.java =====
+
+
+===== ./App.java =====
+package org.example.ChessGame;
+
+public class App {
+    public static void main(String[] args) {
+
+    }
+}
+
+===== ./factory/PieceFactory.java =====
+
+
+===== ./strategy/movementStrategy/HorizontalMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+public class HorizontalMovementStrategy {
+    
+}
+
+
+===== ./strategy/movementStrategy/IMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+public interface IMovementStrategy {
+    
+}
+
+
+===== ./strategy/movementStrategy/DiagonalMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+public class DiagonalMovementStrategy {
+    
+}
+
+
+===== ./strategy/movementStrategy/VerticalMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+public class VerticalMovementStrategy {
+    
+}
+
+
+===== ./strategy/movementStrategy/TwoStepMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+public class TwoStepMovementStrategy {
+    
+}
+
+
+===== ./strategy/movementStrategy/CastlingMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+public class CastlingMovementStrategy {
+    
+}
+
+
+===== ./strategy/movementStrategy/EnpassantMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+public class EnpassantMovementStrategy {
+    
+}
+
+
+===== ./strategy/movementStrategy/OneStepMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+public class OneStepMovementStrategy {
+    
+}
+
+
