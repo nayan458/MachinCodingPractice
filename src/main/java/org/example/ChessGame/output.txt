@@ -196,3 +196,976 @@ public class OneStepMovementStrategy {
 }
 
 
+===== ./README.md =====
+Q2. Design Class Diagram for Chess Game
+
+Create a representation for the chessboard.
+Represent all the pieces: King, Queen, Bishop, Knight, Rook, and Pawn.
+Differentiate the pieces based on color: Black and White.
+Each piece should have a method to determine its legal moves based on its current position.
+The chessboard should have a method to move a piece from one position to another.
+There should be a way to check the status of the game, e.g., ongoing, check, checkmate, or stalemate.
+The game should support special moves: castling, pawn promotion, and en passant.
+Implement a player class, where each player has a color and a set of pieces.
+Include a game class that will handle turn-based gameplay between two players.
+The game should have a method to capture and remove a piece from the board.
+
+
+
+===== ./type/CellType.java =====
+package org.example.ChessGame.type;
+
+public enum CellType {
+    DARK_SQUARE,
+    LIGHT_SQUARE
+}
+
+
+===== ./type/PieceType.java =====
+package org.example.ChessGame.type;
+
+public enum PieceType {
+    KING,
+    QUEEN,
+    PAWN,
+    KNIGHT,
+    BISHOP,
+    ROOK,
+}
+
+
+===== ./type/GameStatus.java =====
+package org.example.ChessGame.type;
+
+public enum GameStatus {
+    INITIALIZING,
+    ON_PROGRESS,
+    ENDED,
+    
+}
+
+
+===== ./type/Color.java =====
+package org.example.ChessGame.type;
+
+public enum Color {
+    BLACK,
+    WHITE
+}
+
+
+===== ./model/logger/Logger.java =====
+package org.example.ChessGame.model.logger;
+
+import java.util.Date;
+
+import org.example.ChessGame.model.events.Event;
+import org.example.genericUtils.Observer.Observer;
+
+public class Logger implements Observer<Event>{
+    public void update(Event event) {
+        System.err.println("Log-" + new Date().getTime() + ": " + event.getMessage());
+    };
+}
+
+
+===== ./model/board/StandardBoard.java =====
+package org.example.ChessGame.model.board;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.factory.PieceFactory;
+import org.example.ChessGame.type.CellType;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.PieceType;
+
+public class StandardBoard extends Board {
+    public StandardBoard() {
+        List<Cell> cells = new ArrayList<>();
+        try {
+            // create all the cells
+            for(int rank = 0; rank < 8; rank++){
+                CellType type = rank % 2 == 0 ? CellType.LIGHT_SQUARE : CellType.DARK_SQUARE;
+                for(int file = 0; file < 8; file++) {
+                    cells.add(new Cell(null, type, rank, file));
+                    type = (type == CellType.LIGHT_SQUARE ? CellType.DARK_SQUARE : CellType.LIGHT_SQUARE);
+                }
+            }
+    
+            // assign pieces
+            // ==== Pawns ====
+            for(int i = 8; i < 16; i++)
+                cells.get(i).setPiece( PieceFactory.create(PieceType.PAWN, Color.WHITE, cells.get(i)));
+    
+            for(int i = 48; i < 56; i++)
+                cells.get(i).setPiece( PieceFactory.create(PieceType.PAWN, Color.BLACK, cells.get(i)));
+    
+            // ==== Rooks ====
+            cells.get(0).setPiece( PieceFactory.create(PieceType.ROOK, Color.WHITE, cells.get(0)));
+            cells.get(7).setPiece( PieceFactory.create(PieceType.ROOK, Color.WHITE, cells.get(7)));
+    
+            cells.get(57).setPiece( PieceFactory.create(PieceType.ROOK, Color.BLACK, cells.get(57)));
+            cells.get(63).setPiece( PieceFactory.create(PieceType.ROOK, Color.BLACK, cells.get(63)));
+    
+            // ==== Knights ====
+            cells.get(1).setPiece( PieceFactory.create(PieceType.KNIGHT, Color.WHITE, cells.get(1)));
+            cells.get(6).setPiece( PieceFactory.create(PieceType.KNIGHT, Color.WHITE, cells.get(6)));
+    
+            cells.get(57).setPiece( PieceFactory.create(PieceType.KNIGHT, Color.BLACK, cells.get(57)));
+            cells.get(62).setPiece( PieceFactory.create(PieceType.KNIGHT, Color.BLACK, cells.get(62)));
+    
+            // ==== Bishops ====
+            cells.get(2).setPiece( PieceFactory.create(PieceType.BISHOP, Color.WHITE, cells.get(2)));
+            cells.get(5).setPiece( PieceFactory.create(PieceType.BISHOP, Color.WHITE, cells.get(5)));
+    
+            cells.get(58).setPiece( PieceFactory.create(PieceType.BISHOP, Color.BLACK, cells.get(58)));
+            cells.get(61).setPiece( PieceFactory.create(PieceType.BISHOP, Color.BLACK, cells.get(61)));
+    
+            // ==== Kings ====
+            cells.get(3).setPiece( PieceFactory.create(PieceType.KING, Color.WHITE, cells.get(3)));
+    
+            cells.get(59).setPiece( PieceFactory.create(PieceType.KING, Color.BLACK, cells.get(59)));
+            // ==== Queens ====
+            cells.get(4).setPiece( PieceFactory.create(PieceType.QUEEN, Color.WHITE, cells.get(4)));
+    
+            cells.get(60).setPiece( PieceFactory.create(PieceType.QUEEN, Color.BLACK, cells.get(60)));
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+    }
+}
+
+
+
+===== ./model/board/Board.java =====
+package org.example.ChessGame.model.board;
+
+import java.util.List;
+
+public class Board {
+    private List<Cell> cells;
+}
+
+
+===== ./model/board/Cell.java =====
+package org.example.ChessGame.model.board;
+
+import org.example.ChessGame.model.piece.Piece;
+import org.example.ChessGame.type.CellType;
+
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
+public class Cell {
+    private Piece piece;
+    private final CellType type;  // Dark square or Light square
+    private final Integer rank;   // row
+    private final Integer file;   // col
+
+    public void setPiece(Piece piece) { this.piece = piece; }
+
+    public String display() {   // metod to visualize what piece seats on this cell
+        return piece == null ? "==" : piece.display();
+    }
+
+    @Override
+    public String toString() {
+        String col = String.valueOf((char) ('A' + file));
+        return "Cell{" +
+                "piece=" + piece +
+                ", type=" + type +
+                ", rank=" + rank +
+                ", file=" + file +
+                ", cellId='" + col + file + '\'' +
+                '}';
+    }
+}
+
+
+===== ./model/game/RuleValidator.java =====
+package org.example.ChessGame.model.game;
+
+import java.util.List;
+
+import org.example.ChessGame.exception.gameRulesException.RuleViolationException;
+
+public class RuleValidator {
+    List<Rule> rules;
+
+    public void validate(GameContext gameContext) throws RuleViolationException {
+        for(Rule rule: rules)
+            rule.validate(gameContext);
+
+    }
+}
+
+
+===== ./model/game/GameContext.java =====
+package org.example.ChessGame.model.game;
+
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.model.piece.Piece;
+import org.example.ChessGame.model.player.Player;
+
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
+public class GameContext {
+    private Player player;
+    private Piece piece;
+    private Cell from;
+    private Cell to;
+
+    @Override
+    public String toString(){
+        return "Player moved x from to";
+        // return Player.getColor() + Player.getName() + " moved " + Piece.getType() ;
+    }
+}
+
+
+===== ./model/game/gameEvents/MoveEvent.java =====
+package org.example.ChessGame.model.game.gameEvents;
+
+import org.example.ChessGame.model.events.Event;
+import org.example.ChessGame.model.game.GameContext;
+
+public class MoveEvent implements Event {
+    
+    private String message;
+
+    public MoveEvent(GameContext gameContext) {
+        this.message = gameContext.toString();
+    }
+
+    @Override
+    public String getMessage() {
+        return message;
+    }
+}
+
+
+===== ./model/game/gameEvents/GameEvent.java =====
+package org.example.ChessGame.model.game.gameEvents;
+
+import org.example.ChessGame.model.events.Event;
+
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
+public class GameEvent implements Event {       
+    // publish messages like:
+    // p2 resigned
+    // game ended with a checkmate and x wins 
+    // game ended with a draw
+
+    private String message;
+
+    @Override
+    public String getMessage() {
+        return this.message;
+    }
+}
+
+
+===== ./model/game/Game.java =====
+package org.example.ChessGame.model.game;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.events.IGameEvent;
+import org.example.ChessGame.model.player.Player;
+import org.example.ChessGame.type.GameStatus;
+import org.example.genericUtils.Observer.Observer;
+import org.example.genericUtils.Observer.Subject;
+
+public class Game implements Subject<IGameEvent> {
+    private final Board board;
+    private final List<Player> players;
+    private final RuleValidator ruleValidator;
+    private Player winner;
+    private List<Observer<IGameEvent>> subscribers;
+    private GameStatus status;
+    // turn manager - (White moes first)
+    // history
+
+    private Game(GameBuilder gameBuilder) {
+        this.status = GameStatus.INITIALIZING;
+        this.board = gameBuilder.board;
+        this.players = gameBuilder.players;
+        this.ruleValidator = gameBuilder.ruleValidator;
+        this.subscribers = new ArrayList<>();
+        this.status = GameStatus.ON_PROGRESS;
+    }
+
+    @Override
+    public void subscribe(Observer<IGameEvent> subscriber) {
+        subscribers.add(subscriber);
+    }
+
+    @Override
+    public void unSubscribe(Observer<IGameEvent> subscriber) {
+        subscribers.remove(subscriber);
+    }
+
+    @Override
+    public void notifyObserver(IGameEvent event) {
+        for(Observer<IGameEvent> subscriber: subscribers)
+            subscriber.update(event);
+    }
+
+    public void makeMove(String move){  // make a move
+
+    }
+
+    public GameStatus getStatus(){ return this.status; }
+
+    public void getListOfValidMove(String position){    // display list of moves for a selected position
+
+    }
+
+    public static class GameBuilder {
+        private Board board;
+        private List<Player> players;
+        private RuleValidator ruleValidator;
+
+        public GameBuilder setBoard(Board board){ this.board = board; return this;}
+        public GameBuilder setPlayers(List<Player> players) throws Exception { if(players.size() != 2) throw new Exception("Exactly 2 players can play the game"); this.players = players; return this;}
+        public GameBuilder setRuleValidator(RuleValidator ruleValidator){ this.ruleValidator = ruleValidator; return this;}
+
+        public Game build(){
+            return new Game(this);
+        }
+    }
+}
+
+
+===== ./model/game/Rule.java =====
+package org.example.ChessGame.model.game;
+
+import org.example.ChessGame.exception.gameRulesException.RuleViolationException;
+
+public interface Rule {
+    public void validate(GameContext gameContext) throws RuleViolationException;
+}
+
+
+===== ./model/rules/EnpassantRule.java =====
+package org.example.ChessGame.model.rules;
+
+public class EnpassantRule {
+    
+}
+
+
+===== ./model/rules/CheckMateRule.java =====
+package org.example.ChessGame.model.rules;
+
+public class CheckMateRule {
+    
+}
+
+
+===== ./model/rules/CapturingRule.java =====
+package org.example.ChessGame.model.rules;
+
+public class CapturingRule {
+    
+}
+
+
+===== ./model/rules/CastlingRule.java =====
+package org.example.ChessGame.model.rules;
+
+public class CastlingRule {
+    
+}
+
+
+===== ./model/events/SimpleEventBus.java =====
+package org.example.ChessGame.model.events;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.example.genericUtils.Observer.Observer;
+
+public class SimpleEventBus implements EventBus {
+
+    private final Map<Class<? extends Event>, List<Observer<? extends Event>>> subscribers =
+            new HashMap<>();
+
+    @Override
+    public <T extends Event> void subscribe(Class<T> eventType, Observer<T> observer) {
+        subscribers
+                .computeIfAbsent(eventType, key -> new ArrayList<>())
+                .add(observer);
+    }
+
+    @Override
+    public <T extends Event> void unsubscribe(Class<T> eventType, Observer<T> observer) {
+        List<Observer<? extends Event>> observers = subscribers.get(eventType);
+
+        if (observers == null) {
+            return;
+        }
+
+        observers.remove(observer);
+
+        if (observers.isEmpty()) {
+            subscribers.remove(eventType);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T extends Event> void publish(T event) {
+        List<Observer<? extends Event>> observers =
+                subscribers.get(event.getClass());
+
+        if (observers == null) {
+            return;
+        }
+
+        for (Observer<? extends Event> observer : observers) {
+            ((Observer<T>) observer).update(event);
+        }
+    }
+}
+
+===== ./model/events/EventBus.java =====
+package org.example.ChessGame.model.events;
+
+import org.example.genericUtils.Observer.Observer;
+
+public interface EventBus {
+
+    <T extends Event> void subscribe(
+            Class<T> eventType,
+            Observer<T> observer);
+
+    <T extends Event> void unsubscribe(
+            Class<T> eventType,
+            Observer<T> observer);
+
+    <T extends Event> void publish(T event);
+}
+
+===== ./model/events/Event.java =====
+package org.example.ChessGame.model.events;
+
+public interface Event {
+    String getMessage();
+
+}
+
+
+===== ./model/piece/Knight.java =====
+package org.example.ChessGame.model.piece;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.strategy.movementStrategy.LMovementStrategy;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.PieceType;
+
+public class Knight extends Piece {
+    public Knight(Color color, Cell cell) {
+        super(PieceType.KNIGHT, color, new ArrayList<>(List.of(new LMovementStrategy())));
+    }
+
+    @Override
+    public List<Cell> getValidPositions(Cell from, Board board) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    public String display(){ return "P";}
+}
+
+
+===== ./model/piece/Rook.java =====
+package org.example.ChessGame.model.piece;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.strategy.movementStrategy.HorizontalMovementStrategy;
+import org.example.ChessGame.strategy.movementStrategy.VerticalMovementStrategy;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.PieceType;
+
+public class Rook extends Piece {
+
+    private boolean isMoved;
+
+    public Rook(Color color, Cell cell) {
+        super(
+            PieceType.ROOK, 
+            color, 
+            new ArrayList<>(
+                List.of(
+                    new HorizontalMovementStrategy(), 
+                    new VerticalMovementStrategy()
+                )
+            )
+        );
+        this.isMoved = false;
+    }
+
+    public void setIsMoved(){ this.isMoved = true; }
+
+    public boolean isMoved() { return this.isMoved; } 
+
+    @Override
+    public List<Cell> getValidPositions(Cell from, Board board) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    public String display(){ return "P";}
+}
+
+
+===== ./model/piece/Bishop.java =====
+package org.example.ChessGame.model.piece;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.strategy.movementStrategy.DiagonalMovementStrategy;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.PieceType;
+
+public class Bishop extends Piece{
+    public Bishop(Color color, Cell cell) {
+        super(PieceType.BISHOP, color, new ArrayList<>(List.of(new DiagonalMovementStrategy())));
+    }
+
+    @Override
+    public List<Cell> getValidPositions(Cell from, Board board) {
+        
+        return null;
+    }
+
+
+    public String display(){ return "P";}
+}
+
+
+===== ./model/piece/Queen.java =====
+package org.example.ChessGame.model.piece;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.strategy.movementStrategy.DiagonalMovementStrategy;
+import org.example.ChessGame.strategy.movementStrategy.HorizontalMovementStrategy;
+import org.example.ChessGame.strategy.movementStrategy.VerticalMovementStrategy;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.PieceType;
+
+public class Queen extends Piece {
+    public Queen(Color color, Cell cell) {
+        super(
+            PieceType.QUEEN, 
+            color, 
+            new ArrayList<>(
+                List.of(
+                    new DiagonalMovementStrategy(), 
+                    new HorizontalMovementStrategy(), 
+                    new VerticalMovementStrategy()
+                )
+            )
+        );
+    }
+
+    @Override
+    public List<Cell> getValidPositions(Cell from, Board board) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    public String display(){ return "P";}
+}
+
+
+===== ./model/piece/King.java =====
+package org.example.ChessGame.model.piece;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.strategy.movementStrategy.OneStepMovementStrategy;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.PieceType;
+
+public class King extends Piece {
+    public King(Color color, Cell cell) {
+        super(PieceType.KING, color, new ArrayList<>(List.of(new OneStepMovementStrategy())));
+    }
+
+    @Override
+    public List<Cell> getValidPositions(Cell from, Board board) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public String display(){ return "P";}
+}
+
+
+===== ./model/piece/Piece.java =====
+package org.example.ChessGame.model.piece;
+
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.strategy.movementStrategy.IMovementStrategy;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.PieceType;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@AllArgsConstructor
+@Getter
+public abstract class Piece {
+    private final PieceType type;
+    private final Color color;
+    private final List<IMovementStrategy> movementStrategies;
+
+    public abstract List<Cell> getValidPositions(Cell from, Board board);
+    public abstract String display();
+}
+
+
+===== ./model/piece/Pawn.java =====
+package org.example.ChessGame.model.piece;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.PieceType;
+
+public class Pawn extends Piece {
+
+    public Pawn(Color color, Cell cell) {
+        super(PieceType.PAWN, color, null);
+    }
+
+    @Override
+    public List<Cell> getValidPositions(Cell from, Board board) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    public String display(){ return "P";}
+}
+
+
+===== ./model/player/Player.java =====
+package org.example.ChessGame.model.player;
+
+import org.example.ChessGame.model.events.Event;
+import org.example.genericUtils.Observer.Observer;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@AllArgsConstructor
+@Getter
+public class Player implements Observer<Event> {
+
+    private final String name;
+
+    @Override
+    public void update(Event event) {
+        System.out.println(name + ": " + event.getMessage());
+    }
+    
+}
+
+
+===== ./App.java =====
+package org.example.ChessGame;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.model.board.StandardBoard;
+import org.example.ChessGame.model.events.EventBus;
+import org.example.ChessGame.model.events.SimpleEventBus;
+import org.example.ChessGame.model.game.Game;
+import org.example.ChessGame.model.game.gameEvents.GameEvent;
+import org.example.ChessGame.model.game.gameEvents.MoveEvent;
+import org.example.ChessGame.model.player.Player;
+import org.example.ChessGame.model.logger.Logger;
+
+public class App {
+
+    public static void main(String[] args) {
+        Player p1 = new Player("BOB");
+        Player p2 = new Player("Alice");
+        Logger logger = new Logger();
+
+        EventBus eventBus = new SimpleEventBus();
+
+        // eventBus.subscribe(GameContext.class, p1);
+        eventBus.subscribe(GameEvent.class, p1);  // p1
+        eventBus.subscribe(GameEvent.class, p2);  // p2
+        eventBus.subscribe(GameEvent.class, logger);  // logger
+        
+        eventBus.subscribe(MoveEvent.class, p1);  // p1
+        eventBus.subscribe(MoveEvent.class, p2);  // p2
+        eventBus.subscribe(MoveEvent.class, logger);  // logger
+
+        
+
+        List<Player> players = new ArrayList<>(List.of(p1,p2));
+
+
+        try {
+            eventBus.publish(new GameEvent("Initializing the game..."));
+            
+            Game game = new Game.GameBuilder()
+                                    .setBoard(new StandardBoard())
+                                    .setPlayers(players)
+                                    .setRuleValidator(null)
+                                    .build();
+            
+            game.subscribe(logger); 
+            
+            eventBus.publish(new GameEvent("Game is Initialized Successfully and it is ready to play."));
+            eventBus.publish(new GameEvent("Current Game State: " + game.getStatus()));
+
+        } catch (Exception e) {
+            // notifyObserver(e.getMessage());
+            eventBus.publish(new GameEvent("ERROR: " + e.getMessage()));
+
+        }
+    }
+}
+
+===== ./exception/gameRulesException/RuleViolationException.java =====
+package org.example.ChessGame.exception.gameRulesException;
+
+public abstract class RuleViolationException extends Exception {
+    
+    public RuleViolationException() {
+        super("GAME RULE VIOLATION: " + "This action is against the game rules");
+    }
+
+    public RuleViolationException(String message) {
+        super("GAME RULE VIOLATION: " + message);
+    }
+}
+
+
+===== ./exception/pieceCreationException/IllegalPieceCreationException.java =====
+package org.example.ChessGame.exception.pieceCreationException;
+
+public class IllegalPieceCreationException extends Exception {
+    public IllegalPieceCreationException(){
+        super("Illeagal Piece Creation: " + "No such piece exist in our system");
+    }
+
+    public IllegalPieceCreationException(String message){
+        super("Illeagal Piece Creation: " + message);
+    }
+}
+
+
+===== ./output.txt =====
+
+
+===== ./factory/PieceFactory.java =====
+package org.example.ChessGame.factory;
+
+import org.example.ChessGame.exception.pieceCreationException.IllegalPieceCreationException;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.model.piece.Bishop;
+import org.example.ChessGame.model.piece.King;
+import org.example.ChessGame.model.piece.Knight;
+import org.example.ChessGame.model.piece.Pawn;
+import org.example.ChessGame.model.piece.Piece;
+import org.example.ChessGame.model.piece.Queen;
+import org.example.ChessGame.model.piece.Rook;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.PieceType;
+
+public final class PieceFactory {
+
+    public static Piece create(PieceType type, Color color, Cell cell) throws IllegalPieceCreationException {
+        switch (type) {
+            case PAWN:
+                return new Pawn(color, cell);
+            case KNIGHT:
+                return new Knight(color, cell);
+            case BISHOP:
+                return new Bishop(color, cell);
+            case ROOK:
+                return new Rook(color, cell);
+            case KING:
+                return new King(color, cell);
+            case QUEEN:
+                return new Queen(color, cell);
+            default:
+                throw new IllegalPieceCreationException();
+        }
+    }
+
+}
+
+
+===== ./strategy/movementStrategy/HorizontalMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+
+public class HorizontalMovementStrategy implements IMovementStrategy {
+    
+    public List<Cell> getListOfMoves(Cell from, Board board) {
+        List<Cell> to = new ArrayList<>();
+        return to;
+    }
+
+}
+
+
+===== ./strategy/movementStrategy/IMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+
+public interface IMovementStrategy {
+    List<Cell> getListOfMoves(Cell from, Board board);
+}
+
+
+===== ./strategy/movementStrategy/LMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+
+public class LMovementStrategy implements IMovementStrategy {
+    
+    public List<Cell> getListOfMoves(Cell from, Board board) {
+        List<Cell> to = new ArrayList<>();
+        return to;
+    }
+
+}
+
+
+===== ./strategy/movementStrategy/DiagonalMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+
+public class DiagonalMovementStrategy implements IMovementStrategy{
+
+    public List<Cell> getListOfMoves(Cell from, Board board) {
+        List<Cell> to = new ArrayList<>();
+        return to;
+    }
+}
+
+
+===== ./strategy/movementStrategy/VerticalMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+
+public class VerticalMovementStrategy implements IMovementStrategy {
+    
+    public List<Cell> getListOfMoves(Cell from, Board board) {
+        List<Cell> to = new ArrayList<>();
+        return to;
+    }
+
+}
+
+
+===== ./strategy/movementStrategy/TwoStepMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+
+public class TwoStepMovementStrategy implements IMovementStrategy {
+    
+    public List<Cell> getListOfMoves(Cell from, Board board) {
+        List<Cell> to = new ArrayList<>();
+        return to;
+    }
+
+}
+
+
+===== ./strategy/movementStrategy/OneStepMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+
+public class OneStepMovementStrategy implements IMovementStrategy {
+    
+    public List<Cell> getListOfMoves(Cell from, Board board) {
+        List<Cell> to = new ArrayList<>();
+        return to;
+    }
+
+}
+
+

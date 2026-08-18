@@ -4,41 +4,55 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.example.ChessGame.model.board.Board;
-import org.example.ChessGame.model.events.IGameEvent;
+import org.example.ChessGame.model.events.Event;
 import org.example.ChessGame.model.player.Player;
+import org.example.ChessGame.type.GameStatus;
 import org.example.genericUtils.Observer.Observer;
 import org.example.genericUtils.Observer.Subject;
 
-public class Game implements Subject<IGameEvent> {
+public class Game implements Subject<Event> {
     private final Board board;
     private final List<Player> players;
     private final RuleValidator ruleValidator;
     private Player winner;
-    private List<Observer<IGameEvent>> subscribers;
+    private List<Observer<Event>> subscribers;
+    private GameStatus status;
     // turn manager - (White moes first)
     // history
 
-    @Override
-    public void subscribe(Observer<IGameEvent> subscriber) {
-        subscribers.add(subscriber);
-    }
-
-    @Override
-    public void unSubscribe(Observer<IGameEvent> subscriber) {
-        subscribers.remove(subscriber);
-    }
-
-    @Override
-    public void notifyObserver(IGameEvent event) {
-        for(Observer<IGameEvent> subscriber: subscribers)
-            subscriber.update(event);
-    }
-
     private Game(GameBuilder gameBuilder) {
+        this.status = GameStatus.INITIALIZING;
         this.board = gameBuilder.board;
         this.players = gameBuilder.players;
         this.ruleValidator = gameBuilder.ruleValidator;
         this.subscribers = new ArrayList<>();
+        this.status = GameStatus.ON_PROGRESS;
+    }
+
+    @Override
+    public void subscribe(Observer<Event> subscriber) {
+        subscribers.add(subscriber);
+    }
+
+    @Override
+    public void unSubscribe(Observer<Event> subscriber) {
+        subscribers.remove(subscriber);
+    }
+
+    @Override
+    public void notifyObserver(Event event) {
+        for(Observer<Event> subscriber: subscribers)
+            subscriber.update(event);
+    }
+
+    public void makeMove(String move){  // make a move
+
+    }
+
+    public GameStatus getStatus(){ return this.status; }
+
+    public void getListOfValidMove(String position){    // display list of moves for a selected position
+
     }
 
     public static class GameBuilder {

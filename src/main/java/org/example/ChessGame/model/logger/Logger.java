@@ -1,8 +1,12 @@
 package org.example.ChessGame.model.logger;
 
-import org.example.ChessGame.model.events.IGameEvent;
+import java.util.Date;
+
+import org.example.ChessGame.model.events.Event;
 import org.example.genericUtils.Observer.Observer;
 
-public class Logger implements Observer<IGameEvent>{
-    public void update(IGameEvent event) {};
+public class Logger implements Observer<Event>{
+    public void update(Event event) {
+        System.err.println("Log-" + new Date().getTime() + ": " + event.getMessage());
+    };
 }

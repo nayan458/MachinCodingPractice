@@ -16,7 +16,7 @@ public class Bishop extends Piece{
 
     @Override
     public List<Cell> getValidPositions(Cell from, Board board) {
-        // TODO Auto-generated method stub
+        
         return null;
     }
 

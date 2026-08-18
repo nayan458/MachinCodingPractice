@@ -4,23 +4,55 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.example.ChessGame.model.board.StandardBoard;
+import org.example.ChessGame.model.events.EventBus;
+import org.example.ChessGame.model.events.SimpleEventBus;
 import org.example.ChessGame.model.game.Game;
+import org.example.ChessGame.model.game.gameEvents.GameEvent;
+import org.example.ChessGame.model.game.gameEvents.MoveEvent;
 import org.example.ChessGame.model.player.Player;
+import org.example.ChessGame.model.logger.Logger;
 
 public class App {
+
     public static void main(String[] args) {
-        List<Player> players = new ArrayList<>();
-        players.add(new Player());
-        players.add(new Player());
+        Player p1 = new Player("BOB");
+        Player p2 = new Player("Alice");
+        Logger logger = new Logger();
+
+        EventBus eventBus = new SimpleEventBus();
+
+        // eventBus.subscribe(GameContext.class, p1);
+        eventBus.subscribe(GameEvent.class, p1);  // p1
+        eventBus.subscribe(GameEvent.class, p2);  // p2
+        eventBus.subscribe(GameEvent.class, logger);  // logger
+        
+        eventBus.subscribe(MoveEvent.class, p1);  // p1
+        eventBus.subscribe(MoveEvent.class, p2);  // p2
+        eventBus.subscribe(MoveEvent.class, logger);  // logger
+
+        
+
+        List<Player> players = new ArrayList<>(List.of(p1,p2));
+
+
         try {
+            eventBus.publish(new GameEvent("Initializing the game..."));
+            
             Game game = new Game.GameBuilder()
-                            .setBoard(new StandardBoard())
-                            .setPlayers(players)
-                            .setRuleValidator(null)
-                            .build();
-                            
+                                    .setBoard(new StandardBoard())
+                                    .setPlayers(players)
+                                    .setRuleValidator(null)
+                                    .build();
+            
+            game.subscribe(logger); 
+            
+            eventBus.publish(new GameEvent("Game is Initialized Successfully and it is ready to play."));
+            eventBus.publish(new GameEvent("Current Game State: " + game.getStatus()));
+
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            // notifyObserver(e.getMessage());
+            eventBus.publish(new GameEvent("ERROR: " + e.getMessage()));
+
         }
     }
 }
