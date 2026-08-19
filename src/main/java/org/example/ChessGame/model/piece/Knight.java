@@ -14,6 +14,15 @@ public class Knight extends Piece {
         super(PieceType.KNIGHT, color, new ArrayList<>(List.of(new LMovementStrategy())));
     }
 
+    public Knight(Knight other) {
+        super(other);
+    }
+
+    @Override
+    public Piece cloneObject() {
+        return new Knight(this);
+    }
+
     @Override
     public List<Cell> getValidPositions(Cell from, Board board) {
         // TODO Auto-generated method stub
@@ -21,5 +30,5 @@ public class Knight extends Piece {
     }
 
 
-    public String display(){ return "P";}
+    public String display(){ return getColor() == Color.BLACK ? "BK" : "WK";}
 }

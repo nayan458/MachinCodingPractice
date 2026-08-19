@@ -14,204 +14,6 @@ The game should have a method to capture and remove a piece from the board.
 
 
 
-===== ./type/PieceType.java =====
-package org.example.ChessGame.type;
-
-public enum PieceType {
-    KING,
-    QUEEN,
-    PAWN,
-    KNIGHT,
-    BISHOP,
-    ROOK,
-}
-
-
-===== ./type/Color.java =====
-package org.example.ChessGame.type;
-
-public enum Color {
-    BLACK,
-    WHITE
-}
-
-
-===== ./model/board/Board.java =====
-package org.example.ChessGame.model.board;
-
-public class Board {
-    
-}
-
-
-===== ./model/board/Cell.java =====
-package org.example.ChessGame.model.board;
-
-public class Cell {
-    
-}
-
-
-===== ./model/game/Game.java =====
-
-
-===== ./model/piece/Knight.java =====
-package org.example.ChessGame.model.piece;
-
-public class Knight {
-    
-}
-
-
-===== ./model/piece/Rook.java =====
-package org.example.ChessGame.model.piece;
-
-public class Rook {
-    
-}
-
-
-===== ./model/piece/Bishop.java =====
-package org.example.ChessGame.model.piece;
-
-public class Bishop {
-    
-}
-
-
-===== ./model/piece/Queen.java =====
-package org.example.ChessGame.model.piece;
-
-public class Queen {
-    
-}
-
-
-===== ./model/piece/King.java =====
-package org.example.ChessGame.model.piece;
-
-public class King {
-    
-}
-
-
-===== ./model/piece/Piece.java =====
-package org.example.ChessGame.model.piece;
-
-import org.example.ChessGame.type.Color;
-import org.example.ChessGame.type.PieceType;
-
-public abstract class Piece {
-    private PieceType type;
-    private Color color;
-
-    public abstract void move(String from, String to);
-}
-
-
-===== ./model/piece/Pawn.java =====
-package org.example.ChessGame.model.piece;
-
-public class Pawn {
-    
-}
-
-
-===== ./model/player/Player.java =====
-
-
-===== ./App.java =====
-package org.example.ChessGame;
-
-public class App {
-    public static void main(String[] args) {
-
-    }
-}
-
-===== ./factory/PieceFactory.java =====
-
-
-===== ./strategy/movementStrategy/HorizontalMovementStrategy.java =====
-package org.example.ChessGame.strategy.movementStrategy;
-
-public class HorizontalMovementStrategy {
-    
-}
-
-
-===== ./strategy/movementStrategy/IMovementStrategy.java =====
-package org.example.ChessGame.strategy.movementStrategy;
-
-public interface IMovementStrategy {
-    
-}
-
-
-===== ./strategy/movementStrategy/DiagonalMovementStrategy.java =====
-package org.example.ChessGame.strategy.movementStrategy;
-
-public class DiagonalMovementStrategy {
-    
-}
-
-
-===== ./strategy/movementStrategy/VerticalMovementStrategy.java =====
-package org.example.ChessGame.strategy.movementStrategy;
-
-public class VerticalMovementStrategy {
-    
-}
-
-
-===== ./strategy/movementStrategy/TwoStepMovementStrategy.java =====
-package org.example.ChessGame.strategy.movementStrategy;
-
-public class TwoStepMovementStrategy {
-    
-}
-
-
-===== ./strategy/movementStrategy/CastlingMovementStrategy.java =====
-package org.example.ChessGame.strategy.movementStrategy;
-
-public class CastlingMovementStrategy {
-    
-}
-
-
-===== ./strategy/movementStrategy/EnpassantMovementStrategy.java =====
-package org.example.ChessGame.strategy.movementStrategy;
-
-public class EnpassantMovementStrategy {
-    
-}
-
-
-===== ./strategy/movementStrategy/OneStepMovementStrategy.java =====
-package org.example.ChessGame.strategy.movementStrategy;
-
-public class OneStepMovementStrategy {
-    
-}
-
-
-===== ./README.md =====
-Q2. Design Class Diagram for Chess Game
-
-Create a representation for the chessboard.
-Represent all the pieces: King, Queen, Bishop, Knight, Rook, and Pawn.
-Differentiate the pieces based on color: Black and White.
-Each piece should have a method to determine its legal moves based on its current position.
-The chessboard should have a method to move a piece from one position to another.
-There should be a way to check the status of the game, e.g., ongoing, check, checkmate, or stalemate.
-The game should support special moves: castling, pawn promotion, and en passant.
-Implement a player class, where each player has a color and a set of pieces.
-Include a game class that will handle turn-based gameplay between two players.
-The game should have a method to capture and remove a piece from the board.
-
-
-
 ===== ./type/CellType.java =====
 package org.example.ChessGame.type;
 
@@ -417,10 +219,11 @@ public class GameContext {
     private Piece piece;
     private Cell from;
     private Cell to;
+    private String move;
 
     @Override
     public String toString(){
-        return "Player moved x from to";
+        return "Player " + player.getName() + " made a move: " + move ;
         // return Player.getColor() + Player.getName() + " moved " + Piece.getType() ;
     }
 }
@@ -474,22 +277,29 @@ public class GameEvent implements Event {
 package org.example.ChessGame.model.game;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Scanner;
 
 import org.example.ChessGame.model.board.Board;
-import org.example.ChessGame.model.events.IGameEvent;
+import org.example.ChessGame.model.events.Event;
+import org.example.ChessGame.model.events.EventBus;
+import org.example.ChessGame.model.game.gameEvents.GameEvent;
+import org.example.ChessGame.model.game.gameEvents.MoveEvent;
 import org.example.ChessGame.model.player.Player;
 import org.example.ChessGame.type.GameStatus;
 import org.example.genericUtils.Observer.Observer;
 import org.example.genericUtils.Observer.Subject;
 
-public class Game implements Subject<IGameEvent> {
+public class Game {
     private final Board board;
     private final List<Player> players;
     private final RuleValidator ruleValidator;
+    private final EventBus eventBus;
     private Player winner;
-    private List<Observer<IGameEvent>> subscribers;
     private GameStatus status;
+    private Integer currentPlayerIndex;
+    private Scanner sc;
     // turn manager - (White moes first)
     // history
 
@@ -498,44 +308,51 @@ public class Game implements Subject<IGameEvent> {
         this.board = gameBuilder.board;
         this.players = gameBuilder.players;
         this.ruleValidator = gameBuilder.ruleValidator;
-        this.subscribers = new ArrayList<>();
+        this.eventBus = gameBuilder.eventBus;
+        this.currentPlayerIndex = 0;
+        this.sc = new Scanner(System.in);
+        Collections.shuffle(players);
         this.status = GameStatus.ON_PROGRESS;
     }
 
-    @Override
-    public void subscribe(Observer<IGameEvent> subscriber) {
-        subscribers.add(subscriber);
+
+    public void start() {
+        eventBus.publish(new GameEvent("WHITE TO MOVE: " + players.get(currentPlayerIndex).getName() + "'s turn") );
     }
 
-    @Override
-    public void unSubscribe(Observer<IGameEvent> subscriber) {
-        subscribers.remove(subscriber);
+    public void makeMove(){  // make a move
+        String move = sc.nextLine();
+        if(move.equals("regine")) {
+            status = GameStatus.ENDED;
+            int winnerIndex = (currentPlayerIndex + 1) % 2;
+            winner = players.get(winnerIndex);
+            eventBus.publish(new GameEvent(players.get(currentPlayerIndex).getName() + "Regined and the winner is, " + winner.getName()));
+            return;
+        }
+        eventBus.publish(new MoveEvent(new GameContext(players.get(currentPlayerIndex), null, null, null, move)));
     }
 
-    @Override
-    public void notifyObserver(IGameEvent event) {
-        for(Observer<IGameEvent> subscriber: subscribers)
-            subscriber.update(event);
-    }
-
-    public void makeMove(String move){  // make a move
-
+    public void advanceTurn() {
+        currentPlayerIndex = (currentPlayerIndex + 1) % 2;
+        eventBus.publish(new GameEvent("WHITE TO MOVE: " + players.get(currentPlayerIndex).getName() + "'s turn") );
     }
 
     public GameStatus getStatus(){ return this.status; }
 
     public void getListOfValidMove(String position){    // display list of moves for a selected position
-
+        
     }
 
     public static class GameBuilder {
         private Board board;
         private List<Player> players;
         private RuleValidator ruleValidator;
+        private EventBus eventBus;
 
         public GameBuilder setBoard(Board board){ this.board = board; return this;}
         public GameBuilder setPlayers(List<Player> players) throws Exception { if(players.size() != 2) throw new Exception("Exactly 2 players can play the game"); this.players = players; return this;}
-        public GameBuilder setRuleValidator(RuleValidator ruleValidator){ this.ruleValidator = ruleValidator; return this;}
+        public GameBuilder setRuleValidator(RuleValidator ruleValidator){ this.ruleValidator = ruleValidator; return this; }
+        public GameBuilder setEventBus(EventBus eventBus) { this.eventBus = eventBus; return this; }
 
         public Game build(){
             return new Game(this);
@@ -598,19 +415,19 @@ import org.example.genericUtils.Observer.Observer;
 
 public class SimpleEventBus implements EventBus {
 
-    private final Map<Class<? extends Event>, List<Observer<? extends Event>>> subscribers =
+    private final Map<Class<? extends Event>, List<Observer<? super Event>>> subscribers =
             new HashMap<>();
 
     @Override
-    public <T extends Event> void subscribe(Class<T> eventType, Observer<T> observer) {
+    public <T extends Event> void subscribe(Class<T> eventType, Observer<? super T> observer) {
         subscribers
                 .computeIfAbsent(eventType, key -> new ArrayList<>())
-                .add(observer);
+                .add((Observer<? super Event>) observer);
     }
 
     @Override
-    public <T extends Event> void unsubscribe(Class<T> eventType, Observer<T> observer) {
-        List<Observer<? extends Event>> observers = subscribers.get(eventType);
+    public <T extends Event> void unsubscribe(Class<T> eventType, Observer<? super T> observer) {
+        List<Observer<? super Event>> observers = subscribers.get(eventType);
 
         if (observers == null) {
             return;
@@ -623,18 +440,17 @@ public class SimpleEventBus implements EventBus {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <T extends Event> void publish(T event) {
-        List<Observer<? extends Event>> observers =
+        List<Observer<? super Event>> observers =
                 subscribers.get(event.getClass());
 
         if (observers == null) {
             return;
         }
 
-        for (Observer<? extends Event> observer : observers) {
-            ((Observer<T>) observer).update(event);
+        for (Observer<? super Event> observer : observers) {
+            observer.update(event);
         }
     }
 }
@@ -648,11 +464,11 @@ public interface EventBus {
 
     <T extends Event> void subscribe(
             Class<T> eventType,
-            Observer<T> observer);
+            Observer<? super T> observer);
 
     <T extends Event> void unsubscribe(
             Class<T> eventType,
-            Observer<T> observer);
+            Observer<? super T> observer);
 
     <T extends Event> void publish(T event);
 }
@@ -904,6 +720,8 @@ public class Player implements Observer<Event> {
 
     private final String name;
 
+    public String getName(){ return this.name;}
+
     @Override
     public void update(Event event) {
         System.out.println(name + ": " + event.getMessage());
@@ -925,6 +743,7 @@ import org.example.ChessGame.model.game.Game;
 import org.example.ChessGame.model.game.gameEvents.GameEvent;
 import org.example.ChessGame.model.game.gameEvents.MoveEvent;
 import org.example.ChessGame.model.player.Player;
+import org.example.ChessGame.type.GameStatus;
 import org.example.ChessGame.model.logger.Logger;
 
 public class App {
@@ -957,12 +776,20 @@ public class App {
                                     .setBoard(new StandardBoard())
                                     .setPlayers(players)
                                     .setRuleValidator(null)
+                                    .setEventBus(eventBus)
                                     .build();
             
-            game.subscribe(logger); 
+             
             
             eventBus.publish(new GameEvent("Game is Initialized Successfully and it is ready to play."));
             eventBus.publish(new GameEvent("Current Game State: " + game.getStatus()));
+
+            game.start();
+
+            while(game.getStatus() != GameStatus.ENDED) {
+                game.makeMove();
+                game.advanceTurn();
+            }
 
         } catch (Exception e) {
             // notifyObserver(e.getMessage());

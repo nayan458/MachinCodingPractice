@@ -14,6 +14,16 @@ public class Rook extends Piece {
 
     private boolean isMoved;
 
+    public Rook(Rook other) {
+        super(other);
+        this.isMoved = other.isMoved;
+    }
+
+    @Override
+    public Piece cloneObject() {
+        return new Rook(this);
+    }
+
     public Rook(Color color, Cell cell) {
         super(
             PieceType.ROOK, 
@@ -39,5 +49,5 @@ public class Rook extends Piece {
     }
 
 
-    public String display(){ return "P";}
+    public String display(){ return getColor() == Color.BLACK ? "BR" : "WR";}
 }

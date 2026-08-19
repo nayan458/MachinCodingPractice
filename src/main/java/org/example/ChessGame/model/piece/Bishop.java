@@ -14,6 +14,15 @@ public class Bishop extends Piece{
         super(PieceType.BISHOP, color, new ArrayList<>(List.of(new DiagonalMovementStrategy())));
     }
 
+    public Bishop(Bishop other) {
+        super(other);
+    }
+
+    @Override
+    public Piece cloneObject() {
+        return new Bishop(this);
+    }
+
     @Override
     public List<Cell> getValidPositions(Cell from, Board board) {
         
@@ -21,5 +30,5 @@ public class Bishop extends Piece{
     }
 
 
-    public String display(){ return "P";}
+    public String display(){ return getColor() == Color.BLACK ? "BB" : "WB";}
 }

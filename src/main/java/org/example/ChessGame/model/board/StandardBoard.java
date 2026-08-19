@@ -2,6 +2,7 @@ package org.example.ChessGame.model.board;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.example.ChessGame.factory.PieceFactory;
 import org.example.ChessGame.type.CellType;
@@ -9,8 +10,9 @@ import org.example.ChessGame.type.Color;
 import org.example.ChessGame.type.PieceType;
 
 public class StandardBoard extends Board {
+
     public StandardBoard() {
-        List<Cell> cells = new ArrayList<>();
+        super(new ArrayList<>());
         try {
             // create all the cells
             for(int rank = 0; rank < 8; rank++){
@@ -33,7 +35,7 @@ public class StandardBoard extends Board {
             cells.get(0).setPiece( PieceFactory.create(PieceType.ROOK, Color.WHITE, cells.get(0)));
             cells.get(7).setPiece( PieceFactory.create(PieceType.ROOK, Color.WHITE, cells.get(7)));
     
-            cells.get(57).setPiece( PieceFactory.create(PieceType.ROOK, Color.BLACK, cells.get(57)));
+            cells.get(56).setPiece( PieceFactory.create(PieceType.ROOK, Color.BLACK, cells.get(57)));
             cells.get(63).setPiece( PieceFactory.create(PieceType.ROOK, Color.BLACK, cells.get(63)));
     
             // ==== Knights ====
@@ -61,7 +63,19 @@ public class StandardBoard extends Board {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
+    }
 
+    public StandardBoard(List<Cell> cells) {
+        super(
+            cells.stream()
+                .map(Cell::cloneObject)
+                .collect(Collectors.toCollection(ArrayList::new))
+        );
+    }
+
+    @Override
+    public Board cloneObject() {
+        return new StandardBoard(this.cells);
     }
 }
 

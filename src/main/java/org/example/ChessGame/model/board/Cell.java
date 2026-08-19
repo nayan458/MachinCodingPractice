@@ -2,15 +2,23 @@ package org.example.ChessGame.model.board;
 
 import org.example.ChessGame.model.piece.Piece;
 import org.example.ChessGame.type.CellType;
+import org.example.genericUtils.interfaces.Clonable;
 
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class Cell {
+public class Cell implements Clonable<Cell> {
     private Piece piece;
     private final CellType type;  // Dark square or Light square
     private final Integer rank;   // row
     private final Integer file;   // col
+
+    // public Cell(Piece piece){}
+
+    @Override
+    public Cell cloneObject() {
+        return new Cell(piece.cloneObject(), type, rank, file);
+    }
 
     public void setPiece(Piece piece) { this.piece = piece; }
 

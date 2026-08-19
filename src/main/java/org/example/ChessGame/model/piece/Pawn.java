@@ -14,6 +14,15 @@ public class Pawn extends Piece {
         super(PieceType.PAWN, color, null);
     }
 
+    public Pawn(Pawn other) {
+        super(other);
+    }
+
+    @Override
+    public Piece cloneObject() {
+        return new Pawn(this);
+    }
+
     @Override
     public List<Cell> getValidPositions(Cell from, Board board) {
         // TODO Auto-generated method stub
@@ -21,5 +30,5 @@ public class Pawn extends Piece {
     }
 
 
-    public String display(){ return "P";}
+    public String display(){ return getColor() == Color.BLACK ? "BP" : "WP";}
 }

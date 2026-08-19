@@ -26,6 +26,15 @@ public class Queen extends Piece {
         );
     }
 
+    public Queen(Queen other) {
+        super(other);
+    }
+
+    @Override
+    public Piece cloneObject() {
+        return new Queen(this);
+    }
+
     @Override
     public List<Cell> getValidPositions(Cell from, Board board) {
         // TODO Auto-generated method stub
@@ -33,5 +42,5 @@ public class Queen extends Piece {
     }
 
 
-    public String display(){ return "P";}
+    public String display(){ return getColor() == Color.BLACK ? "BQ" : "WQ";}
 }

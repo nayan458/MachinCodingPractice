@@ -10,8 +10,23 @@ import org.example.ChessGame.type.Color;
 import org.example.ChessGame.type.PieceType;
 
 public class King extends Piece {
+    private boolean isMoved;
+
     public King(Color color, Cell cell) {
         super(PieceType.KING, color, new ArrayList<>(List.of(new OneStepMovementStrategy())));
+    }
+
+    public King(King other) {
+        super(other);
+    }
+
+    public void setIsMoved() { isMoved = true;}
+
+    public boolean getIsMoved() { return this.isMoved; }
+
+    @Override
+    public Piece cloneObject() {
+        return new King(this);
     }
 
     @Override
@@ -20,5 +35,5 @@ public class King extends Piece {
         return null;
     }
 
-    public String display(){ return "P";}
+    public String display(){ return getColor() == Color.BLACK ? "B+" : "W+";}
 }
