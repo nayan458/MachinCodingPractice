@@ -5,8 +5,10 @@ import org.example.ChessGame.model.piece.Piece;
 import org.example.ChessGame.model.player.Player;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 @AllArgsConstructor
+@Getter
 public class Move {
     private Player player;
     private Piece piece;

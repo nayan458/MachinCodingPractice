@@ -11,6 +11,7 @@ import org.example.ChessGame.model.game.gameEvents.MoveEvent;
 import org.example.ChessGame.model.player.Player;
 import org.example.ChessGame.type.Color;
 import org.example.ChessGame.type.GameStatus;
+import org.example.ChessGame.utils.NotationUtils;
 
 public class Game {
     private final Board board;
@@ -47,15 +48,28 @@ public class Game {
     }
 
     public void makeMove(){  // make a move
-        String move = sc.nextLine();
-        if(move.equals("regine")) {
+        System.out.println("Please select the position of the piece to move: ");
+        String from = sc.nextLine();
+        System.out.println("Please make a move: ");
+        String to = sc.nextLine();
+
+        Move move = new Move(
+            players.get(currentPlayerIndex), 
+            board.getCell(NotationUtils.getIndex(from)).getPiece(), 
+            board.getCell(NotationUtils.getIndex(from)), 
+            board.getCell(NotationUtils.getIndex(to)), 
+            to);
+
+        this.board.apply(move);
+
+        if(to.equals("regine")) {
             status = GameStatus.ENDED;
             int winnerIndex = (currentPlayerIndex + 1) % 2;
             winner = players.get(winnerIndex);
             eventBus.publish(new GameEvent(players.get(currentPlayerIndex).getName() + "Regined and the winner is, " + winner.getName()));
             return;
         }
-        eventBus.publish(new MoveEvent(new Move(players.get(currentPlayerIndex), null, null, null, move)));
+        eventBus.publish(new MoveEvent(new Move(players.get(currentPlayerIndex), null, null, null, to)));
     }
 
     public void advanceTurn() {

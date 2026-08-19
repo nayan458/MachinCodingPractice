@@ -26,6 +26,12 @@ public class Cell implements Clonable<Cell> {
         return piece == null ? "==" : piece.display();
     }
 
+    public void clear() {
+        this.piece = null;
+    }
+
+    public Piece getPiece() { return this.piece; }
+
     @Override
     public String toString() {
         String col = String.valueOf((char) ('A' + file));

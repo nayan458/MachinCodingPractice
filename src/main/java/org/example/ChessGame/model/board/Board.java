@@ -2,6 +2,7 @@ package org.example.ChessGame.model.board;
 
 import java.util.List;
 
+import org.example.ChessGame.model.game.Move;
 import org.example.genericUtils.interfaces.Clonable;
 
 import lombok.AllArgsConstructor;
@@ -24,5 +25,19 @@ public abstract class Board implements Clonable<Board> {
         view.append("\n  A_  B_  C_  D_  E_  F_  G_  H_ ");
 
         return view.toString();
+    }
+
+    public Cell getCell(int cellNumber) {
+        // try {
+            
+        // } catch (Exception e) {
+        //     // TODO: handle exception
+        // }
+        return cells.get(cellNumber);
+    }
+
+    public void apply(Move move) {
+        move.getTo().setPiece(move.getPiece());
+        move.getFrom().clear();
     }
 }
