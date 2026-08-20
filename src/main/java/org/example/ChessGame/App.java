@@ -60,10 +60,15 @@ public class App {
                     game.advanceTurn();
             }
 
+            game.viewReplay();
+
+            System.out.println("\n\n=========== GAME LOGS =============");
+            logger.displayLogs();
+
         } catch (Exception e) {
             // notifyObserver(e.getMessage());
             eventBus.publish(new GameEvent("ERROR: " + e.getMessage()));
-
         }
+
     }
 }

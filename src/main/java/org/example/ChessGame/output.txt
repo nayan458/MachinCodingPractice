@@ -1,3 +1,35 @@
+===== ./utils/NotationUtils.java =====
+package org.example.ChessGame.utils;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+
+public final class NotationUtils {
+
+    public static int getIndex(String notation) {
+        int file = notation.charAt(0) - 'a';
+        int rank = notation.charAt(1) - '1';
+
+        return rank * 8 + file;
+    }
+
+    public static int file(String notation) {
+        return notation.charAt(0) - 'a';
+    }
+
+    public static int rank(String notation) {
+        return notation.charAt(1) - '1';
+    }
+
+    public static int getIndex(int row, int col) {
+        return row * 8 + col;
+    }
+
+    public static Cell resolve(Board board, String notation) {
+        return board.getCell(getIndex(rank(notation), file(notation)));
+    }
+}
+
 ===== ./README.md =====
 Q2. Design Class Diagram for Chess Game
 
@@ -76,6 +108,7 @@ package org.example.ChessGame.model.board;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.example.ChessGame.factory.PieceFactory;
 import org.example.ChessGame.type.CellType;
@@ -83,8 +116,9 @@ import org.example.ChessGame.type.Color;
 import org.example.ChessGame.type.PieceType;
 
 public class StandardBoard extends Board {
+
     public StandardBoard() {
-        List<Cell> cells = new ArrayList<>();
+        super(new ArrayList<>());
         try {
             // create all the cells
             for(int rank = 0; rank < 8; rank++){
@@ -107,7 +141,7 @@ public class StandardBoard extends Board {
             cells.get(0).setPiece( PieceFactory.create(PieceType.ROOK, Color.WHITE, cells.get(0)));
             cells.get(7).setPiece( PieceFactory.create(PieceType.ROOK, Color.WHITE, cells.get(7)));
     
-            cells.get(57).setPiece( PieceFactory.create(PieceType.ROOK, Color.BLACK, cells.get(57)));
+            cells.get(56).setPiece( PieceFactory.create(PieceType.ROOK, Color.BLACK, cells.get(57)));
             cells.get(63).setPiece( PieceFactory.create(PieceType.ROOK, Color.BLACK, cells.get(63)));
     
             // ==== Knights ====
@@ -135,7 +169,19 @@ public class StandardBoard extends Board {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
+    }
 
+    public StandardBoard(List<Cell> cells) {
+        super(
+            cells.stream()
+                .map(Cell::cloneObject)
+                .collect(Collectors.toCollection(ArrayList::new))
+        );
+    }
+
+    @Override
+    public Board cloneObject() {
+        return new StandardBoard(this.cells);
     }
 }
 
@@ -146,8 +192,44 @@ package org.example.ChessGame.model.board;
 
 import java.util.List;
 
-public class Board {
-    private List<Cell> cells;
+import org.example.ChessGame.model.game.Move;
+import org.example.genericUtils.interfaces.Clonable;
+
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
+public abstract class Board implements Clonable<Board> {
+    protected List<Cell> cells;
+
+    @Override
+    public String toString() {
+        StringBuffer view = new StringBuffer();
+        for(int i = 0; i < 64; i++){
+            if(i % 8 == 0){
+                view.append("\n");
+                view.append(String.valueOf(i/8 + 1));
+            }
+            view.append(" " + cells.get(i).display() + " ");
+        }
+
+        view.append("\n  A_  B_  C_  D_  E_  F_  G_  H_ ");
+
+        return view.toString();
+    }
+
+    public Cell getCell(int cellNumber) {
+        // try {
+            
+        // } catch (Exception e) {
+        //     // TODO: handle exception
+        // }
+        return cells.get(cellNumber);
+    }
+
+    public void apply(Move move) {
+        move.getTo().setPiece(move.getPiece());
+        move.getFrom().clear();
+    }
 }
 
 
@@ -156,21 +238,35 @@ package org.example.ChessGame.model.board;
 
 import org.example.ChessGame.model.piece.Piece;
 import org.example.ChessGame.type.CellType;
+import org.example.genericUtils.interfaces.Clonable;
 
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class Cell {
+public class Cell implements Clonable<Cell> {
     private Piece piece;
     private final CellType type;  // Dark square or Light square
     private final Integer rank;   // row
     private final Integer file;   // col
+
+    // public Cell(Piece piece){}
+
+    @Override
+    public Cell cloneObject() {
+        return new Cell(piece.cloneObject(), type, rank, file);
+    }
 
     public void setPiece(Piece piece) { this.piece = piece; }
 
     public String display() {   // metod to visualize what piece seats on this cell
         return piece == null ? "==" : piece.display();
     }
+
+    public void clear() {
+        this.piece = null;
+    }
+
+    public Piece getPiece() { return this.piece; }
 
     @Override
     public String toString() {
@@ -196,35 +292,10 @@ import org.example.ChessGame.exception.gameRulesException.RuleViolationException
 public class RuleValidator {
     List<Rule> rules;
 
-    public void validate(GameContext gameContext) throws RuleViolationException {
+    public void validate(Move gameContext) throws RuleViolationException {
         for(Rule rule: rules)
             rule.validate(gameContext);
 
-    }
-}
-
-
-===== ./model/game/GameContext.java =====
-package org.example.ChessGame.model.game;
-
-import org.example.ChessGame.model.board.Cell;
-import org.example.ChessGame.model.piece.Piece;
-import org.example.ChessGame.model.player.Player;
-
-import lombok.AllArgsConstructor;
-
-@AllArgsConstructor
-public class GameContext {
-    private Player player;
-    private Piece piece;
-    private Cell from;
-    private Cell to;
-    private String move;
-
-    @Override
-    public String toString(){
-        return "Player " + player.getName() + " made a move: " + move ;
-        // return Player.getColor() + Player.getName() + " moved " + Piece.getType() ;
     }
 }
 
@@ -233,13 +304,13 @@ public class GameContext {
 package org.example.ChessGame.model.game.gameEvents;
 
 import org.example.ChessGame.model.events.Event;
-import org.example.ChessGame.model.game.GameContext;
+import org.example.ChessGame.model.game.Move;
 
 public class MoveEvent implements Event {
     
     private String message;
 
-    public MoveEvent(GameContext gameContext) {
+    public MoveEvent(Move gameContext) {
         this.message = gameContext.toString();
     }
 
@@ -276,20 +347,18 @@ public class GameEvent implements Event {
 ===== ./model/game/Game.java =====
 package org.example.ChessGame.model.game;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
 import org.example.ChessGame.model.board.Board;
-import org.example.ChessGame.model.events.Event;
 import org.example.ChessGame.model.events.EventBus;
 import org.example.ChessGame.model.game.gameEvents.GameEvent;
 import org.example.ChessGame.model.game.gameEvents.MoveEvent;
 import org.example.ChessGame.model.player.Player;
+import org.example.ChessGame.type.Color;
 import org.example.ChessGame.type.GameStatus;
-import org.example.genericUtils.Observer.Observer;
-import org.example.genericUtils.Observer.Subject;
+import org.example.ChessGame.utils.NotationUtils;
 
 public class Game {
     private final Board board;
@@ -312,24 +381,42 @@ public class Game {
         this.currentPlayerIndex = 0;
         this.sc = new Scanner(System.in);
         Collections.shuffle(players);
+        players.get(0).setColor(Color.WHITE);
+        players.get(1).setColor(Color.BLACK);
         this.status = GameStatus.ON_PROGRESS;
     }
 
+    public void displayBoard() {
+        System.out.println(board);
+    }
 
     public void start() {
         eventBus.publish(new GameEvent("WHITE TO MOVE: " + players.get(currentPlayerIndex).getName() + "'s turn") );
     }
 
     public void makeMove(){  // make a move
-        String move = sc.nextLine();
-        if(move.equals("regine")) {
+        System.out.println("Please select the position of the piece to move: ");
+        String from = sc.nextLine();
+        System.out.println("Please make a move: ");
+        String to = sc.nextLine();
+
+        Move move = new Move(
+            players.get(currentPlayerIndex), 
+            board.getCell(NotationUtils.getIndex(from)).getPiece(), 
+            board.getCell(NotationUtils.getIndex(from)), 
+            board.getCell(NotationUtils.getIndex(to)), 
+            to);
+
+        this.board.apply(move);
+
+        if(to.equals("regine")) {
             status = GameStatus.ENDED;
             int winnerIndex = (currentPlayerIndex + 1) % 2;
             winner = players.get(winnerIndex);
             eventBus.publish(new GameEvent(players.get(currentPlayerIndex).getName() + "Regined and the winner is, " + winner.getName()));
             return;
         }
-        eventBus.publish(new MoveEvent(new GameContext(players.get(currentPlayerIndex), null, null, null, move)));
+        eventBus.publish(new MoveEvent(new Move(players.get(currentPlayerIndex), null, null, null, to)));
     }
 
     public void advanceTurn() {
@@ -361,13 +448,40 @@ public class Game {
 }
 
 
+===== ./model/game/Move.java =====
+package org.example.ChessGame.model.game;
+
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.model.piece.Piece;
+import org.example.ChessGame.model.player.Player;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@AllArgsConstructor
+@Getter
+public class Move {
+    private Player player;
+    private Piece piece;
+    private Cell from;
+    private Cell to;
+    private String move;
+
+    @Override
+    public String toString(){
+        return "Player " + player.getName() + " made a move: " + move ;
+        // return Player.getColor() + Player.getName() + " moved " + Piece.getType() ;
+    }
+}
+
+
 ===== ./model/game/Rule.java =====
 package org.example.ChessGame.model.game;
 
 import org.example.ChessGame.exception.gameRulesException.RuleViolationException;
 
 public interface Rule {
-    public void validate(GameContext gameContext) throws RuleViolationException;
+    public void validate(Move gameContext) throws RuleViolationException;
 }
 
 
@@ -499,6 +613,15 @@ public class Knight extends Piece {
         super(PieceType.KNIGHT, color, new ArrayList<>(List.of(new LMovementStrategy())));
     }
 
+    public Knight(Knight other) {
+        super(other);
+    }
+
+    @Override
+    public Piece cloneObject() {
+        return new Knight(this);
+    }
+
     @Override
     public List<Cell> getValidPositions(Cell from, Board board) {
         // TODO Auto-generated method stub
@@ -506,7 +629,7 @@ public class Knight extends Piece {
     }
 
 
-    public String display(){ return "P";}
+    public String display(){ return getColor() == Color.BLACK ? "BK" : "WK";}
 }
 
 
@@ -526,6 +649,16 @@ import org.example.ChessGame.type.PieceType;
 public class Rook extends Piece {
 
     private boolean isMoved;
+
+    public Rook(Rook other) {
+        super(other);
+        this.isMoved = other.isMoved;
+    }
+
+    @Override
+    public Piece cloneObject() {
+        return new Rook(this);
+    }
 
     public Rook(Color color, Cell cell) {
         super(
@@ -552,7 +685,7 @@ public class Rook extends Piece {
     }
 
 
-    public String display(){ return "P";}
+    public String display(){ return getColor() == Color.BLACK ? "BR" : "WR";}
 }
 
 
@@ -573,6 +706,15 @@ public class Bishop extends Piece{
         super(PieceType.BISHOP, color, new ArrayList<>(List.of(new DiagonalMovementStrategy())));
     }
 
+    public Bishop(Bishop other) {
+        super(other);
+    }
+
+    @Override
+    public Piece cloneObject() {
+        return new Bishop(this);
+    }
+
     @Override
     public List<Cell> getValidPositions(Cell from, Board board) {
         
@@ -580,7 +722,7 @@ public class Bishop extends Piece{
     }
 
 
-    public String display(){ return "P";}
+    public String display(){ return getColor() == Color.BLACK ? "BB" : "WB";}
 }
 
 
@@ -613,6 +755,15 @@ public class Queen extends Piece {
         );
     }
 
+    public Queen(Queen other) {
+        super(other);
+    }
+
+    @Override
+    public Piece cloneObject() {
+        return new Queen(this);
+    }
+
     @Override
     public List<Cell> getValidPositions(Cell from, Board board) {
         // TODO Auto-generated method stub
@@ -620,7 +771,7 @@ public class Queen extends Piece {
     }
 
 
-    public String display(){ return "P";}
+    public String display(){ return getColor() == Color.BLACK ? "BQ" : "WQ";}
 }
 
 
@@ -637,8 +788,23 @@ import org.example.ChessGame.type.Color;
 import org.example.ChessGame.type.PieceType;
 
 public class King extends Piece {
+    private boolean isMoved;
+
     public King(Color color, Cell cell) {
         super(PieceType.KING, color, new ArrayList<>(List.of(new OneStepMovementStrategy())));
+    }
+
+    public King(King other) {
+        super(other);
+    }
+
+    public void setIsMoved() { isMoved = true;}
+
+    public boolean getIsMoved() { return this.isMoved; }
+
+    @Override
+    public Piece cloneObject() {
+        return new King(this);
     }
 
     @Override
@@ -647,7 +813,7 @@ public class King extends Piece {
         return null;
     }
 
-    public String display(){ return "P";}
+    public String display(){ return getColor() == Color.BLACK ? "B+" : "W+";}
 }
 
 
@@ -661,16 +827,23 @@ import org.example.ChessGame.model.board.Cell;
 import org.example.ChessGame.strategy.movementStrategy.IMovementStrategy;
 import org.example.ChessGame.type.Color;
 import org.example.ChessGame.type.PieceType;
+import org.example.genericUtils.interfaces.Clonable;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public abstract class Piece {
+public abstract class Piece implements Clonable<Piece> {
     private final PieceType type;
     private final Color color;
     private final List<IMovementStrategy> movementStrategies;
+
+    public Piece(Piece other) {
+        this.type = other.type;
+        this.color = other.color;
+        this.movementStrategies = other.movementStrategies;
+    }
 
     public abstract List<Cell> getValidPositions(Cell from, Board board);
     public abstract String display();
@@ -694,6 +867,15 @@ public class Pawn extends Piece {
         super(PieceType.PAWN, color, null);
     }
 
+    public Pawn(Pawn other) {
+        super(other);
+    }
+
+    @Override
+    public Piece cloneObject() {
+        return new Pawn(this);
+    }
+
     @Override
     public List<Cell> getValidPositions(Cell from, Board board) {
         // TODO Auto-generated method stub
@@ -701,7 +883,7 @@ public class Pawn extends Piece {
     }
 
 
-    public String display(){ return "P";}
+    public String display(){ return getColor() == Color.BLACK ? "BP" : "WP";}
 }
 
 
@@ -709,6 +891,7 @@ public class Pawn extends Piece {
 package org.example.ChessGame.model.player;
 
 import org.example.ChessGame.model.events.Event;
+import org.example.ChessGame.type.Color;
 import org.example.genericUtils.Observer.Observer;
 
 import lombok.AllArgsConstructor;
@@ -719,8 +902,11 @@ import lombok.Getter;
 public class Player implements Observer<Event> {
 
     private final String name;
+    private Color color;
 
     public String getName(){ return this.name;}
+
+    public void setColor(Color color) { this.color = color; }
 
     @Override
     public void update(Event event) {
@@ -749,13 +935,12 @@ import org.example.ChessGame.model.logger.Logger;
 public class App {
 
     public static void main(String[] args) {
-        Player p1 = new Player("BOB");
-        Player p2 = new Player("Alice");
+        Player p1 = new Player("BOB", null);
+        Player p2 = new Player("Alice", null);
         Logger logger = new Logger();
 
         EventBus eventBus = new SimpleEventBus();
 
-        // eventBus.subscribe(GameContext.class, p1);
         eventBus.subscribe(GameEvent.class, p1);  // p1
         eventBus.subscribe(GameEvent.class, p2);  // p2
         eventBus.subscribe(GameEvent.class, logger);  // logger
@@ -787,8 +972,11 @@ public class App {
             game.start();
 
             while(game.getStatus() != GameStatus.ENDED) {
+                game.displayBoard();
                 game.makeMove();
-                game.advanceTurn();
+                game.displayBoard();
+                if(game.getStatus() != GameStatus.ENDED)
+                    game.advanceTurn();
             }
 
         } catch (Exception e) {

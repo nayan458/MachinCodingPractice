@@ -15,9 +15,20 @@ public class Cell implements Clonable<Cell> {
 
     // public Cell(Piece piece){}
 
+    // @Override
+    // public Cell cloneObject() {
+    //     return new Cell(piece.cloneObject(), type, rank, file);
+    // }
+
     @Override
     public Cell cloneObject() {
-        return new Cell(piece.cloneObject(), type, rank, file);
+        Piece clonedPiece = null;
+
+        if (piece != null) {
+            clonedPiece = piece.cloneObject();
+        }
+
+        return new Cell(clonedPiece, type, rank, file);
     }
 
     public void setPiece(Piece piece) { this.piece = piece; }

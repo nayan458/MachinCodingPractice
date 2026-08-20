@@ -1,5 +1,6 @@
 package org.example.ChessGame.model.game;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
@@ -14,7 +15,7 @@ import org.example.ChessGame.type.GameStatus;
 import org.example.ChessGame.utils.NotationUtils;
 
 public class Game {
-    private final Board board;
+    private Board board;
     private final List<Player> players;
     private final RuleValidator ruleValidator;
     private final EventBus eventBus;
@@ -22,6 +23,8 @@ public class Game {
     private GameStatus status;
     private Integer currentPlayerIndex;
     private Scanner sc;
+    private List<Board> history;
+    private Color currentColor;
     // turn manager - (White moes first)
     // history
 
@@ -36,6 +39,8 @@ public class Game {
         Collections.shuffle(players);
         players.get(0).setColor(Color.WHITE);
         players.get(1).setColor(Color.BLACK);
+        this.history = new ArrayList<>();
+        this.history.add(board.cloneObject());
         this.status = GameStatus.ON_PROGRESS;
     }
 
@@ -44,12 +49,38 @@ public class Game {
     }
 
     public void start() {
-        eventBus.publish(new GameEvent("WHITE TO MOVE: " + players.get(currentPlayerIndex).getName() + "'s turn") );
+        Color currentColor = players.get(currentPlayerIndex).getColor();
+        eventBus.publish(new GameEvent(currentColor +" TO MOVE: " + players.get(currentPlayerIndex).getName() + "'s turn") );
+    }
+
+    public void undo() {
+        history.remove(history.size()-1);
+        this.board = history.get(history.size() - 1);
+        currentPlayerIndex = (currentPlayerIndex + 1) % 2;
+        System.out.println(board);
     }
 
     public void makeMove(){  // make a move
+        Color currentColor = players.get(currentPlayerIndex).getColor();
+        eventBus.publish(new GameEvent(currentColor + " TO MOVE: " + players.get(currentPlayerIndex).getName() + "'s turn"));
         System.out.println("Please select the position of the piece to move: ");
-        String from = sc.nextLine();
+        System.out.println("Use U for undo and R to regine");
+        String moveMade = sc.nextLine();
+
+        if(moveMade.equals("U")) {
+            undo();
+            makeMove();
+        }
+
+        if(moveMade.equals("R")) {
+            status = GameStatus.ENDED;
+            int winnerIndex = (currentPlayerIndex + 1) % 2;
+            winner = players.get(winnerIndex);
+            eventBus.publish(new GameEvent(players.get(currentPlayerIndex).getName() + " Regined and the winner is, " + winner.getName()));
+            return;
+        }
+
+        String from = moveMade;
         System.out.println("Please make a move: ");
         String to = sc.nextLine();
 
@@ -62,22 +93,27 @@ public class Game {
 
         this.board.apply(move);
 
-        if(to.equals("regine")) {
-            status = GameStatus.ENDED;
-            int winnerIndex = (currentPlayerIndex + 1) % 2;
-            winner = players.get(winnerIndex);
-            eventBus.publish(new GameEvent(players.get(currentPlayerIndex).getName() + "Regined and the winner is, " + winner.getName()));
-            return;
-        }
+        history.add(board.cloneObject());
+
+        
         eventBus.publish(new MoveEvent(new Move(players.get(currentPlayerIndex), null, null, null, to)));
     }
 
     public void advanceTurn() {
         currentPlayerIndex = (currentPlayerIndex + 1) % 2;
-        eventBus.publish(new GameEvent("WHITE TO MOVE: " + players.get(currentPlayerIndex).getName() + "'s turn") );
+        Color currentColor = players.get(currentPlayerIndex).getColor();
+        eventBus.publish(new GameEvent(currentColor + " TO MOVE: " + players.get(currentPlayerIndex).getName() + "'s turn") );
     }
 
     public GameStatus getStatus(){ return this.status; }
+
+    public void viewReplay() {
+        System.out.println("============= GAME REPLAY ============");
+        for(Board board: history){
+            System.out.println(board);
+            sc.nextLine();
+        }
+    }
 
     public void getListOfValidMove(String position){    // display list of moves for a selected position
         
