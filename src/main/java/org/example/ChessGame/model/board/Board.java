@@ -2,7 +2,7 @@ package org.example.ChessGame.model.board;
 
 import java.util.List;
 
-import org.example.ChessGame.model.game.Move;
+import org.example.ChessGame.model.game.move.Move;
 import org.example.genericUtils.interfaces.Clonable;
 
 import lombok.AllArgsConstructor;

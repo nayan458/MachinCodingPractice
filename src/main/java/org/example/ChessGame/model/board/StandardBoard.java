@@ -26,40 +26,40 @@ public class StandardBoard extends Board {
             // assign pieces
             // ==== Pawns ====
             for(int i = 8; i < 16; i++)
-                cells.get(i).setPiece( PieceFactory.create(PieceType.PAWN, Color.WHITE, cells.get(i)));
+                cells.get(i).setPiece( PieceFactory.create(PieceType.PAWN, Color.WHITE));
     
             for(int i = 48; i < 56; i++)
-                cells.get(i).setPiece( PieceFactory.create(PieceType.PAWN, Color.BLACK, cells.get(i)));
+                cells.get(i).setPiece( PieceFactory.create(PieceType.PAWN, Color.BLACK));
     
             // ==== Rooks ====
-            cells.get(0).setPiece( PieceFactory.create(PieceType.ROOK, Color.WHITE, cells.get(0)));
-            cells.get(7).setPiece( PieceFactory.create(PieceType.ROOK, Color.WHITE, cells.get(7)));
+            cells.get(0).setPiece( PieceFactory.create(PieceType.ROOK, Color.WHITE));
+            cells.get(7).setPiece( PieceFactory.create(PieceType.ROOK, Color.WHITE));
     
-            cells.get(56).setPiece( PieceFactory.create(PieceType.ROOK, Color.BLACK, cells.get(57)));
-            cells.get(63).setPiece( PieceFactory.create(PieceType.ROOK, Color.BLACK, cells.get(63)));
+            cells.get(56).setPiece( PieceFactory.create(PieceType.ROOK, Color.BLACK));
+            cells.get(63).setPiece( PieceFactory.create(PieceType.ROOK, Color.BLACK));
     
             // ==== Knights ====
-            cells.get(1).setPiece( PieceFactory.create(PieceType.KNIGHT, Color.WHITE, cells.get(1)));
-            cells.get(6).setPiece( PieceFactory.create(PieceType.KNIGHT, Color.WHITE, cells.get(6)));
+            cells.get(1).setPiece( PieceFactory.create(PieceType.KNIGHT, Color.WHITE));
+            cells.get(6).setPiece( PieceFactory.create(PieceType.KNIGHT, Color.WHITE));
     
-            cells.get(57).setPiece( PieceFactory.create(PieceType.KNIGHT, Color.BLACK, cells.get(57)));
-            cells.get(62).setPiece( PieceFactory.create(PieceType.KNIGHT, Color.BLACK, cells.get(62)));
+            cells.get(57).setPiece( PieceFactory.create(PieceType.KNIGHT, Color.BLACK));
+            cells.get(62).setPiece( PieceFactory.create(PieceType.KNIGHT, Color.BLACK));
     
             // ==== Bishops ====
-            cells.get(2).setPiece( PieceFactory.create(PieceType.BISHOP, Color.WHITE, cells.get(2)));
-            cells.get(5).setPiece( PieceFactory.create(PieceType.BISHOP, Color.WHITE, cells.get(5)));
+            cells.get(2).setPiece( PieceFactory.create(PieceType.BISHOP, Color.WHITE));
+            cells.get(5).setPiece( PieceFactory.create(PieceType.BISHOP, Color.WHITE));
     
-            cells.get(58).setPiece( PieceFactory.create(PieceType.BISHOP, Color.BLACK, cells.get(58)));
-            cells.get(61).setPiece( PieceFactory.create(PieceType.BISHOP, Color.BLACK, cells.get(61)));
+            cells.get(58).setPiece( PieceFactory.create(PieceType.BISHOP, Color.BLACK));
+            cells.get(61).setPiece( PieceFactory.create(PieceType.BISHOP, Color.BLACK));
     
             // ==== Kings ====
-            cells.get(3).setPiece( PieceFactory.create(PieceType.KING, Color.WHITE, cells.get(3)));
+            cells.get(3).setPiece( PieceFactory.create(PieceType.KING, Color.WHITE));
     
-            cells.get(59).setPiece( PieceFactory.create(PieceType.KING, Color.BLACK, cells.get(59)));
+            cells.get(59).setPiece( PieceFactory.create(PieceType.KING, Color.BLACK));
             // ==== Queens ====
-            cells.get(4).setPiece( PieceFactory.create(PieceType.QUEEN, Color.WHITE, cells.get(4)));
+            cells.get(4).setPiece( PieceFactory.create(PieceType.QUEEN, Color.WHITE));
     
-            cells.get(60).setPiece( PieceFactory.create(PieceType.QUEEN, Color.BLACK, cells.get(60)));
+            cells.get(60).setPiece( PieceFactory.create(PieceType.QUEEN, Color.BLACK));
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }

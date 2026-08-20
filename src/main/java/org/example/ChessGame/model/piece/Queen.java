@@ -12,7 +12,7 @@ import org.example.ChessGame.type.Color;
 import org.example.ChessGame.type.PieceType;
 
 public class Queen extends Piece {
-    public Queen(Color color, Cell cell) {
+    public Queen(Color color) {
         super(
             PieceType.QUEEN, 
             color, 

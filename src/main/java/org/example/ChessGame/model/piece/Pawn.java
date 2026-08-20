@@ -1,6 +1,5 @@
 package org.example.ChessGame.model.piece;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.example.ChessGame.model.board.Board;
@@ -10,7 +9,7 @@ import org.example.ChessGame.type.PieceType;
 
 public class Pawn extends Piece {
 
-    public Pawn(Color color, Cell cell) {
+    public Pawn(Color color) {
         super(PieceType.PAWN, color, null);
     }
 

@@ -1,7 +1,7 @@
 package org.example.ChessGame.model.game.gameEvents;
 
 import org.example.ChessGame.model.events.Event;
-import org.example.ChessGame.model.game.Move;
+import org.example.ChessGame.model.game.move.Move;
 
 public class MoveEvent implements Event {
     

@@ -10,7 +10,7 @@ import org.example.ChessGame.type.Color;
 import org.example.ChessGame.type.PieceType;
 
 public class Knight extends Piece {
-    public Knight(Color color, Cell cell) {
+    public Knight(Color color) {
         super(PieceType.KNIGHT, color, new ArrayList<>(List.of(new LMovementStrategy())));
     }
 

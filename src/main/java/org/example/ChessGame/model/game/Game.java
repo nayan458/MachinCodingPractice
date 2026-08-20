@@ -9,6 +9,7 @@ import org.example.ChessGame.model.board.Board;
 import org.example.ChessGame.model.events.EventBus;
 import org.example.ChessGame.model.game.gameEvents.GameEvent;
 import org.example.ChessGame.model.game.gameEvents.MoveEvent;
+import org.example.ChessGame.model.game.move.Move;
 import org.example.ChessGame.model.player.Player;
 import org.example.ChessGame.type.Color;
 import org.example.ChessGame.type.GameStatus;
@@ -24,7 +25,9 @@ public class Game {
     private Integer currentPlayerIndex;
     private Scanner sc;
     private List<Board> history;
+    private List<? extends Move> moveHistory;
     private Color currentColor;
+    
     // turn manager - (White moes first)
     // history
 
@@ -41,6 +44,8 @@ public class Game {
         players.get(1).setColor(Color.BLACK);
         this.history = new ArrayList<>();
         this.history.add(board.cloneObject());
+        this.moveHistory = new ArrayList<>();
+        this.moveHistory.add(null);
         this.status = GameStatus.ON_PROGRESS;
     }
 
@@ -84,19 +89,21 @@ public class Game {
         System.out.println("Please make a move: ");
         String to = sc.nextLine();
 
-        Move move = new Move(
+        GameContext move = new GameContext(
             players.get(currentPlayerIndex), 
             board.getCell(NotationUtils.getIndex(from)).getPiece(), 
             board.getCell(NotationUtils.getIndex(from)), 
             board.getCell(NotationUtils.getIndex(to)), 
-            to);
+            to,
 
-        this.board.apply(move);
+        );
+
+        // this.board.apply(move);
 
         history.add(board.cloneObject());
 
         
-        eventBus.publish(new MoveEvent(new Move(players.get(currentPlayerIndex), null, null, null, to)));
+        // eventBus.publish(new MoveEvent(new Move(players.get(currentPlayerIndex), null, null, null, to)));
     }
 
     public void advanceTurn() {

@@ -1,7 +1,6 @@
 package org.example.ChessGame.factory;
 
 import org.example.ChessGame.exception.pieceCreationException.IllegalPieceCreationException;
-import org.example.ChessGame.model.board.Cell;
 import org.example.ChessGame.model.piece.Bishop;
 import org.example.ChessGame.model.piece.King;
 import org.example.ChessGame.model.piece.Knight;
@@ -14,23 +13,39 @@ import org.example.ChessGame.type.PieceType;
 
 public final class PieceFactory {
 
-    public static Piece create(PieceType type, Color color, Cell cell) throws IllegalPieceCreationException {
+    public static Piece create(PieceType type, Color color) throws IllegalPieceCreationException {
         switch (type) {
             case PAWN:
-                return new Pawn(color, cell);
+                return new Pawn(color);
             case KNIGHT:
-                return new Knight(color, cell);
+                return new Knight(color);
             case BISHOP:
-                return new Bishop(color, cell);
+                return new Bishop(color);
             case ROOK:
-                return new Rook(color, cell);
+                return new Rook(color);
             case KING:
-                return new King(color, cell);
+                return new King(color);
             case QUEEN:
-                return new Queen(color, cell);
+                return new Queen(color);
             default:
                 throw new IllegalPieceCreationException();
         }
     }
 
+    public static void viewGuide() {
+        System.out.println("Select piece by entering the value within the bracket: \nPawn(P) \nKnight(N) \nBishop(B) \nRook(R) \nQueen(Q)");
+    }
+
+    public static PieceType pieceTypeResolver(String ch) throws IllegalPieceCreationException {
+
+        switch (ch) {
+            case "P": return PieceType.PAWN;
+            case "N": return PieceType.KNIGHT;
+            case "B": return PieceType.BISHOP;
+            case "R": return PieceType.ROOK;
+            case "Q": return PieceType.QUEEN;
+            default:
+                throw new IllegalPieceCreationException();
+        }
+    }
 }

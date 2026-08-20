@@ -24,7 +24,7 @@ public class Rook extends Piece {
         return new Rook(this);
     }
 
-    public Rook(Color color, Cell cell) {
+    public Rook(Color color) {
         super(
             PieceType.ROOK, 
             color, 

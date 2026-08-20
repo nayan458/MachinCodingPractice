@@ -12,7 +12,7 @@ import org.example.ChessGame.type.PieceType;
 public class King extends Piece {
     private boolean isMoved;
 
-    public King(Color color, Cell cell) {
+    public King(Color color) {
         super(PieceType.KING, color, new ArrayList<>(List.of(new OneStepMovementStrategy())));
     }
 
