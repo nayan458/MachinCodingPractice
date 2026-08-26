@@ -1,9 +1,14 @@
 package org.example.ChessGame.model.board;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.example.ChessGame.model.game.move.Move;
+import org.example.ChessGame.type.Color;
 import org.example.genericUtils.interfaces.Clonable;
+import org.example.ChessGame.model.piece.King;
+import org.example.ChessGame.model.piece.Piece;
 
 import lombok.AllArgsConstructor;
 
@@ -39,5 +44,24 @@ public abstract class Board implements Clonable<Board> {
     public void apply(Move move) {
         move.getTo().setPiece(move.getPiece());
         move.getFrom().clear();
+    }
+
+    public Cell findKing(Color colorToMove) {
+        for(Cell cell: cells)
+            if(
+                cell.getPiece() != null
+                && cell.getPiece().getColor() == colorToMove
+                && cell.getPiece() instanceof King
+            )
+                return cell;
+        return null;    //TODO: Should have thrown exception but keeping it simple for now
+    }
+
+    public Map<? extends Piece,? extends Cell> getListOPieces(Color color) {
+        Map<Piece, Cell> pieces = new HashMap<>();
+        for(Cell cell: cells)
+            if(cell.getPiece() != null && cell.getPiece().getColor() == color)
+                pieces.put(cell.getPiece(), cell);
+        return pieces;
     }
 }

@@ -1,6 +1,6 @@
 package org.example.ChessGame.exception.gameRulesException;
 
-public abstract class RuleViolationException extends Exception {
+public class RuleViolationException extends Exception {
     
     public RuleViolationException() {
         super("GAME RULE VIOLATION: " + "This action is against the game rules");

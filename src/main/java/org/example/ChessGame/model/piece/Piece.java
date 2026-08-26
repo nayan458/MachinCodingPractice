@@ -1,6 +1,8 @@
 package org.example.ChessGame.model.piece;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.example.ChessGame.model.board.Board;
 import org.example.ChessGame.model.board.Cell;
@@ -17,7 +19,7 @@ import lombok.Getter;
 public abstract class Piece implements Clonable<Piece> {
     private final PieceType type;
     private final Color color;
-    private final List<IMovementStrategy> movementStrategies;
+    protected final List<IMovementStrategy> movementStrategies;
 
     public Piece(Piece other) {
         this.type = other.type;
@@ -25,6 +27,11 @@ public abstract class Piece implements Clonable<Piece> {
         this.movementStrategies = other.movementStrategies;
     }
 
-    public abstract List<Cell> getValidPositions(Cell from, Board board);
+    public Set<Cell> getValidPositions(Cell from, Board board) {
+        Set<Cell> validPositions = new HashSet<>();
+        for(IMovementStrategy movementStrategie: movementStrategies)
+            validPositions.addAll(movementStrategie.getListOfMoves(from, board));
+        return validPositions;
+    }
     public abstract String display();
 }

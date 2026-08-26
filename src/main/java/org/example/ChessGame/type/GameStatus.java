@@ -4,5 +4,4 @@ public enum GameStatus {
     INITIALIZING,
     ON_PROGRESS,
     ENDED,
-    
 }

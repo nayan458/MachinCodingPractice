@@ -5,14 +5,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
+import org.example.ChessGame.factory.MoveFactory;
 import org.example.ChessGame.model.board.Board;
 import org.example.ChessGame.model.events.EventBus;
 import org.example.ChessGame.model.game.gameEvents.GameEvent;
 import org.example.ChessGame.model.game.gameEvents.MoveEvent;
 import org.example.ChessGame.model.game.move.Move;
+import org.example.ChessGame.model.game.rule.RuleValidator;
 import org.example.ChessGame.model.player.Player;
 import org.example.ChessGame.type.Color;
 import org.example.ChessGame.type.GameStatus;
+import org.example.ChessGame.type.MoveType;
 import org.example.ChessGame.utils.NotationUtils;
 
 public class Game {
@@ -65,7 +68,17 @@ public class Game {
         System.out.println(board);
     }
 
-    public void makeMove(){  // make a move
+    public void evaluateBoardStatus() {
+        // check if oponent is in check
+        // check for stalement
+        // check checkmate
+    }
+
+    public void displayStatus() {
+        
+    }
+
+    public void makeMove() throws Exception {  // make a move
         Color currentColor = players.get(currentPlayerIndex).getColor();
         eventBus.publish(new GameEvent(currentColor + " TO MOVE: " + players.get(currentPlayerIndex).getName() + "'s turn"));
         System.out.println("Please select the position of the piece to move: ");
@@ -89,19 +102,18 @@ public class Game {
         System.out.println("Please make a move: ");
         String to = sc.nextLine();
 
-        GameContext move = new GameContext(
+        GameContext ctx = new GameContext(
             players.get(currentPlayerIndex), 
             board.getCell(NotationUtils.getIndex(from)).getPiece(), 
             board.getCell(NotationUtils.getIndex(from)), 
             board.getCell(NotationUtils.getIndex(to)), 
             to,
-
+            moveHistory.getLast()
         );
 
-        // this.board.apply(move);
-
+        ruleValidator.validate(ctx, board);
+        this.board.apply(MoveFactory.getMove(MoveType.NORMAL_MOVE, ctx));
         history.add(board.cloneObject());
-
         
         // eventBus.publish(new MoveEvent(new Move(players.get(currentPlayerIndex), null, null, null, to)));
     }
@@ -137,7 +149,14 @@ public class Game {
         public GameBuilder setRuleValidator(RuleValidator ruleValidator){ this.ruleValidator = ruleValidator; return this; }
         public GameBuilder setEventBus(EventBus eventBus) { this.eventBus = eventBus; return this; }
 
-        public Game build(){
+        public Game build() throws IllegalArgumentException {
+            if(
+                board == null ||
+                players == null ||
+                ruleValidator == null ||
+                eventBus == null
+            )
+            throw new IllegalArgumentException();
             return new Game(this);
         }
     }

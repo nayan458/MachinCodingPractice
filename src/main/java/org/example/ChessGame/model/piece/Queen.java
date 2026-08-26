@@ -1,12 +1,15 @@
 package org.example.ChessGame.model.piece;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.example.ChessGame.model.board.Board;
 import org.example.ChessGame.model.board.Cell;
 import org.example.ChessGame.strategy.movementStrategy.DiagonalMovementStrategy;
 import org.example.ChessGame.strategy.movementStrategy.HorizontalMovementStrategy;
+import org.example.ChessGame.strategy.movementStrategy.IMovementStrategy;
 import org.example.ChessGame.strategy.movementStrategy.VerticalMovementStrategy;
 import org.example.ChessGame.type.Color;
 import org.example.ChessGame.type.PieceType;
@@ -36,9 +39,11 @@ public class Queen extends Piece {
     }
 
     @Override
-    public List<Cell> getValidPositions(Cell from, Board board) {
-        // TODO Auto-generated method stub
-        return null;
+    public Set<Cell> getValidPositions(Cell from, Board board) {
+        Set<Cell> validPositions = new HashSet<>();
+        for(IMovementStrategy movementStrategie: movementStrategies)
+            validPositions.addAll(movementStrategie.getListOfMoves(from, board));
+        return validPositions;
     }
 
 
