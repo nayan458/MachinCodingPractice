@@ -5673,3 +5673,2082 @@ public class OneStepMovementStrategy implements IMovementStrategy {
 }
 
 
+===== ./utils/NotationUtils.java =====
+package org.example.ChessGame.utils;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+
+public final class NotationUtils {
+
+    public static int getIndex(String notation) {
+        int file = notation.charAt(0) - 'a';
+        int rank = notation.charAt(1) - '1';
+
+        return rank * 8 + file;
+    }
+
+    public static int file(String notation) {
+        return notation.charAt(0) - 'a';
+    }
+
+    public static int rank(String notation) {
+        return notation.charAt(1) - '1';
+    }
+
+    public static int getIndex(int row, int col) {
+        return row * 8 + col;
+    }
+
+    public static Cell resolve(Board board, String notation) {
+        return board.getCell(getIndex(rank(notation), file(notation)));
+    }
+
+    public static Cell resolve(Board board, Integer row, Integer col) {
+        try {
+            return board.getCell(getIndex(row, col));
+        } catch (Exception e) {     // index out of bound
+            return null;
+        }
+    }
+}
+
+===== ./README.md =====
+Q2. Design Class Diagram for Chess Game
+
+Create a representation for the chessboard.
+Represent all the pieces: King, Queen, Bishop, Knight, Rook, and Pawn.
+Differentiate the pieces based on color: Black and White.
+Each piece should have a method to determine its legal moves based on its current position.
+The chessboard should have a method to move a piece from one position to another.
+There should be a way to check the status of the game, e.g., ongoing, check, checkmate, or stalemate.
+The game should support special moves: castling, pawn promotion, and en passant.
+Implement a player class, where each player has a color and a set of pieces.
+Include a game class that will handle turn-based gameplay between two players.
+The game should have a method to capture and remove a piece from the board.
+
+
+
+===== ./type/CellType.java =====
+package org.example.ChessGame.type;
+
+public enum CellType {
+    DARK_SQUARE,
+    LIGHT_SQUARE
+}
+
+
+===== ./type/PieceType.java =====
+package org.example.ChessGame.type;
+
+public enum PieceType {
+    KING,
+    QUEEN,
+    PAWN,
+    KNIGHT,
+    BISHOP,
+    ROOK,
+}
+
+
+===== ./type/LogLevel.java =====
+package org.example.ChessGame.type;
+
+public enum LogLevel {
+    INFO,
+    DEBUG,
+    ERROR
+}
+
+
+===== ./type/TacticType.java =====
+package org.example.ChessGame.type;
+
+public enum TacticType {
+    NORMAL,
+    CHECK,
+    CHECKMATE,
+    STALEMATE,
+    DRAW,
+    REGINED,
+}
+
+
+===== ./type/GameStatus.java =====
+package org.example.ChessGame.type;
+
+public enum GameStatus {
+    INITIALIZING,
+    ON_PROGRESS,
+    ENDED,
+}
+
+
+===== ./type/Color.java =====
+package org.example.ChessGame.type;
+
+public enum Color {
+    BLACK,
+    WHITE
+}
+
+
+===== ./type/MoveType.java =====
+package org.example.ChessGame.type;
+
+public enum MoveType {
+    NORMAL_MOVE,
+    ENPASSANT_MOVE,
+    PROMOTION_MOVE,
+    CASTELING_KING_SIDE,
+    CASTELING_QUEEN_SIDE,
+}
+
+
+===== ./model/logger/Logger.java =====
+package org.example.ChessGame.model.logger;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.example.ChessGame.model.events.Event;
+import org.example.ChessGame.type.LogLevel;
+import org.example.genericUtils.Observer.Observer;
+
+public class Logger implements Observer<Event>{
+    List<Log> logs;
+
+    public Logger() {
+        this.logs = new ArrayList<>();
+    }
+
+    public void update(Event event) {
+        logs.add(new Log(new Date(), event.getMessage(), LogLevel.INFO));
+        System.err.println("Log-" + new Date().getTime() + ": " + event.getMessage());
+    };
+
+    public void displayLogs() {
+        for(Log log: logs)
+            System.out.println(log);
+    }
+}
+
+
+===== ./model/logger/Log.java =====
+package org.example.ChessGame.model.logger;
+
+import java.util.Date;
+
+import org.example.ChessGame.type.LogLevel;
+
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
+public class Log {
+    private final Date date;
+    private final String message;
+    private final LogLevel logLevel;
+
+    @Override
+    public String toString() {
+        return logLevel + "-" + date.getTime() + ": " + message;
+    }
+}
+
+
+===== ./model/board/StandardBoard.java =====
+package org.example.ChessGame.model.board;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.example.ChessGame.factory.PieceFactory;
+import org.example.ChessGame.type.CellType;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.PieceType;
+
+public class StandardBoard extends Board {
+
+    public StandardBoard() {
+        super(new ArrayList<>());
+        try {
+            // create all the cells
+            for(int rank = 0; rank < 8; rank++){
+                CellType type = rank % 2 == 0 ? CellType.LIGHT_SQUARE : CellType.DARK_SQUARE;
+                for(int file = 0; file < 8; file++) {
+                    cells.add(new Cell(null, type, rank, file));
+                    type = (type == CellType.LIGHT_SQUARE ? CellType.DARK_SQUARE : CellType.LIGHT_SQUARE);
+                }
+            }
+    
+            // assign pieces
+            // ==== Pawns ====
+            for(int i = 8; i < 16; i++)
+                cells.get(i).setPiece( PieceFactory.create(PieceType.PAWN, Color.WHITE));
+    
+            for(int i = 48; i < 56; i++)
+                cells.get(i).setPiece( PieceFactory.create(PieceType.PAWN, Color.BLACK));
+    
+            // ==== Rooks ====
+            cells.get(0).setPiece( PieceFactory.create(PieceType.ROOK, Color.WHITE));
+            cells.get(7).setPiece( PieceFactory.create(PieceType.ROOK, Color.WHITE));
+    
+            cells.get(56).setPiece( PieceFactory.create(PieceType.ROOK, Color.BLACK));
+            cells.get(63).setPiece( PieceFactory.create(PieceType.ROOK, Color.BLACK));
+    
+            // ==== Knights ====
+            cells.get(1).setPiece( PieceFactory.create(PieceType.KNIGHT, Color.WHITE));
+            cells.get(6).setPiece( PieceFactory.create(PieceType.KNIGHT, Color.WHITE));
+    
+            cells.get(57).setPiece( PieceFactory.create(PieceType.KNIGHT, Color.BLACK));
+            cells.get(62).setPiece( PieceFactory.create(PieceType.KNIGHT, Color.BLACK));
+    
+            // ==== Bishops ====
+            cells.get(2).setPiece( PieceFactory.create(PieceType.BISHOP, Color.WHITE));
+            cells.get(5).setPiece( PieceFactory.create(PieceType.BISHOP, Color.WHITE));
+    
+            cells.get(58).setPiece( PieceFactory.create(PieceType.BISHOP, Color.BLACK));
+            cells.get(61).setPiece( PieceFactory.create(PieceType.BISHOP, Color.BLACK));
+    
+            // ==== Kings ====
+            cells.get(3).setPiece( PieceFactory.create(PieceType.KING, Color.WHITE));
+    
+            cells.get(59).setPiece( PieceFactory.create(PieceType.KING, Color.BLACK));
+            // ==== Queens ====
+            cells.get(4).setPiece( PieceFactory.create(PieceType.QUEEN, Color.WHITE));
+    
+            cells.get(60).setPiece( PieceFactory.create(PieceType.QUEEN, Color.BLACK));
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public StandardBoard(List<Cell> cells) {
+        super(
+            cells.stream()
+                .map(Cell::cloneObject)
+                .collect(Collectors.toCollection(ArrayList::new))
+        );
+    }
+
+    @Override
+    public Board cloneObject() {
+        return new StandardBoard(this.cells);
+    }
+}
+
+
+
+===== ./model/board/Board.java =====
+package org.example.ChessGame.model.board;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.example.ChessGame.model.game.move.Move;
+import org.example.ChessGame.type.Color;
+import org.example.genericUtils.interfaces.Clonable;
+import org.example.ChessGame.model.piece.King;
+import org.example.ChessGame.model.piece.Piece;
+
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
+public abstract class Board implements Clonable<Board> {
+    protected List<Cell> cells;
+
+    @Override
+    public String toString() {
+        StringBuffer view = new StringBuffer();
+        for(int i = 0; i < 64; i++){
+            if(i % 8 == 0){
+                view.append("\n");
+                view.append(String.valueOf(i/8 + 1));
+            }
+            view.append(" " + cells.get(i).display() + " ");
+        }
+
+        view.append("\n  A_  B_  C_  D_  E_  F_  G_  H_ ");
+
+        return view.toString();
+    }
+
+    public Cell getCell(int cellNumber) {
+        // try {
+            
+        // } catch (Exception e) {
+        //     // TODO: handle exception
+        // }
+        return cells.get(cellNumber);
+    }
+
+    public void apply(Move move) {
+        move.getTo().setPiece(move.getPiece());
+        move.getFrom().clear();
+    }
+
+    public Cell findKing(Color colorToMove) {
+        for(Cell cell: cells)
+            if(
+                cell.getPiece() != null
+                && cell.getPiece().getColor() == colorToMove
+                && cell.getPiece() instanceof King
+            )
+                return cell;
+        return null;    //TODO: Should have thrown exception but keeping it simple for now
+    }
+
+    public Map<? extends Piece,? extends Cell> getListOPieces(Color color) {
+        Map<Piece, Cell> pieces = new HashMap<>();
+        for(Cell cell: cells)
+            if(cell.getPiece() != null && cell.getPiece().getColor() == color)
+                pieces.put(cell.getPiece(), cell);
+        return pieces;
+    }
+}
+
+
+===== ./model/board/Cell.java =====
+package org.example.ChessGame.model.board;
+
+import org.example.ChessGame.model.piece.Piece;
+import org.example.ChessGame.type.CellType;
+import org.example.genericUtils.interfaces.Clonable;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@AllArgsConstructor
+@Getter
+public class Cell implements Clonable<Cell> {
+    private Piece piece;
+    private final CellType type;  // Dark square or Light square
+    private final Integer rank;   // row
+    private final Integer file;   // col
+
+    // public Cell(Piece piece){}
+
+    // @Override
+    // public Cell cloneObject() {
+    //     return new Cell(piece.cloneObject(), type, rank, file);
+    // }
+
+    @Override
+    public Cell cloneObject() {
+        Piece clonedPiece = null;
+
+        if (piece != null) {
+            clonedPiece = piece.cloneObject();
+        }
+
+        return new Cell(clonedPiece, type, rank, file);
+    }
+
+    public void setPiece(Piece piece) { this.piece = piece; }
+
+    public String display() {   // metod to visualize what piece seats on this cell
+        return piece == null ? "==" : piece.display();
+    }
+
+    public void clear() {
+        this.piece = null;
+    }
+
+    public Piece getPiece() { return this.piece; }
+
+    @Override
+    public String toString() {
+        String col = String.valueOf((char) ('A' + file));
+        return "Cell{" +
+                "piece=" + piece +
+                ", type=" + type +
+                ", rank=" + rank +
+                ", file=" + file +
+                ", cellId='" + col + file + '\'' +
+                '}';
+    }
+}
+
+
+===== ./model/game/move/CastelingMove.java =====
+package org.example.ChessGame.model.game.move;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.model.game.GameContext;
+import org.example.ChessGame.type.MoveType;
+
+import lombok.Getter;
+
+
+@Getter
+public class CastelingMove extends Move {
+    private Cell rookFrom;
+    private Cell rookTo;
+    private MoveType type;
+
+    public CastelingMove(GameContext ctx, MoveType type) {
+        super(ctx);
+    }
+
+    @Override
+    public boolean isPatterLegal() {
+        return true;
+    }
+    @Override
+    public void apply(Board board) {
+
+    }
+
+}
+
+
+===== ./model/game/move/EnPassantMove.java =====
+package org.example.ChessGame.model.game.move;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.game.GameContext;
+
+
+
+public class EnPassantMove extends Move {
+    public EnPassantMove (GameContext ctx) {
+        super(ctx);
+    }
+
+    @Override
+    public boolean isPatterLegal() {
+        return true;
+    }
+    @Override
+    public void apply(Board board) {
+        
+    }
+}
+
+
+===== ./model/game/move/PromotionMove.java =====
+package org.example.ChessGame.model.game.move;
+
+import java.util.Scanner;
+
+import org.example.ChessGame.exception.pieceCreationException.IllegalPieceCreationException;
+import org.example.ChessGame.factory.PieceFactory;
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.game.GameContext;
+import org.example.ChessGame.model.piece.Piece;
+
+import lombok.Getter;
+
+@Getter
+public class PromotionMove extends Move {
+    private final Piece promotedTo;
+    
+    public PromotionMove (GameContext ctx) throws IllegalPieceCreationException {
+        super(ctx);
+        try (Scanner sc = new Scanner(System.in)) {
+            System.out.println("Enter the Piece You want it to convert to: ");
+            PieceFactory.viewGuide();
+            String pieceType = sc.nextLine();
+            this.promotedTo = PieceFactory.create(
+                PieceFactory.pieceTypeResolver(pieceType), 
+                ctx.getPiece().getColor()
+            );
+        }
+    }
+
+    @Override
+    public boolean isPatterLegal() {
+        return true;
+    }
+    @Override
+    public void apply(Board board) {
+        
+    }
+
+}
+
+
+===== ./model/game/move/Move.java =====
+package org.example.ChessGame.model.game.move;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.model.game.GameContext;
+import org.example.ChessGame.model.piece.Piece;
+import org.example.ChessGame.model.player.Player;
+
+import lombok.Getter;
+
+
+@Getter
+public abstract class Move {
+    private final Player player;
+    private final Piece piece;
+    private final Cell from;
+    private final Cell to;
+    private final String move;
+    private Piece CapturedPiece;
+
+    public Move(GameContext ctx) {
+        this.player = ctx.getPlayer();
+        this.piece = ctx.getPiece();
+        this.from = ctx.getFrom();
+        this.to = ctx.getTo();
+        this.move = ctx.getMove();
+        this.CapturedPiece = null;
+    }
+
+    public void setCapturedPiece(Piece piece) { this.CapturedPiece = piece; }
+
+    @Override
+    public String toString(){
+        return "Player " + player.getName() + " made a move: " + move ;
+        // return Player.getColor() + Player.getName() + " moved " + Piece.getType() ;
+    }
+
+    public abstract boolean isPatterLegal();
+    public abstract void apply(Board board);
+}
+
+
+===== ./model/game/move/NormalMove.java =====
+package org.example.ChessGame.model.game.move;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.game.GameContext;
+
+public class NormalMove extends Move {
+    public NormalMove (GameContext ctx) {
+        super(ctx);
+    }
+
+    @Override
+    public boolean isPatterLegal() {
+        return true;
+    }
+    @Override
+    public void apply(Board board) {
+        
+    }
+}
+
+
+===== ./model/game/GameContext.java =====
+package org.example.ChessGame.model.game;
+
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.model.game.move.Move;
+import org.example.ChessGame.model.piece.Piece;
+import org.example.ChessGame.model.player.Player;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+
+@AllArgsConstructor
+@Getter
+@Builder
+public class GameContext {
+    private final Player player;
+    private final Piece piece;
+    private final Cell from;
+    private final Cell to;
+    private final String move;
+    private final Move previous;
+}
+
+
+===== ./model/game/rule/RuleValidator.java =====
+package org.example.ChessGame.model.game.rule;
+
+import org.example.ChessGame.exception.gameRulesException.RuleViolationException;
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.game.GameContext;
+
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
+public class RuleValidator {
+    private final Rule rule;
+
+    public void validate(GameContext gameContext, Board board) throws RuleViolationException {
+            rule.execute(gameContext, board);
+    }
+}
+
+
+===== ./model/game/rule/TurnCheckRule.java =====
+package org.example.ChessGame.model.game.rule;
+
+import org.example.ChessGame.exception.gameRulesException.RuleViolationException;
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.game.GameContext;
+
+public class TurnCheckRule extends Rule {
+    
+    @Override
+    protected void validate(GameContext ctx, Board board) throws RuleViolationException {
+        
+        System.out.println("Validator: Turn check rule triggered");
+        
+        if(ctx.getPlayer().getColor() != ctx.getPiece().getColor())
+            throw new RuleViolationException("Validator:" + ctx.getPlayer().getColor().toString() + " turn to move.");
+    }
+}
+
+
+===== ./model/game/rule/SelfCheckRule.java =====
+package org.example.ChessGame.model.game.rule;
+
+import org.example.ChessGame.exception.gameRulesException.RuleViolationException;
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.game.GameContext;
+import org.example.ChessGame.model.game.gameEvaluator.AttackDetector;
+
+public class SelfCheckRule extends Rule {
+
+    @Override
+    protected void validate(GameContext ctx, Board board) throws RuleViolationException {
+        AttackDetector attackDetector = new AttackDetector();
+        if(attackDetector.isAttacked(board.findKing(ctx.getPlayer().getColor()), ctx.getPlayer().getColor(), board))
+            throw new RuleViolationException("Illegal move, after the move your king is in check");
+        System.out.println("Validator: Self check rule triggered");
+    }
+}
+
+
+===== ./model/game/rule/PieceExistanceRule.java =====
+package org.example.ChessGame.model.game.rule;
+
+import org.example.ChessGame.exception.gameRulesException.RuleViolationException;
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.game.GameContext;
+
+public class PieceExistanceRule extends Rule {
+    @Override
+    protected void validate(GameContext ctx, Board board) throws RuleViolationException {
+        if(ctx.getFrom().getPiece() == null)
+            throw new RuleViolationException("Cannot select a empty cell");
+        System.out.println("Validator: Piece Existance check rule triggered");
+    }
+}
+
+
+===== ./model/game/rule/PatternLeagalityRule.java =====
+package org.example.ChessGame.model.game.rule;
+
+import org.example.ChessGame.exception.gameRulesException.RuleViolationException;
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.game.GameContext;
+
+// check if the piece can really move the way user have provided the move in. Is there any obstacale etc.
+
+public class PatternLeagalityRule extends Rule {
+    @Override
+    protected void validate(GameContext ctx, Board board) throws RuleViolationException {
+        if(!ctx.getPiece().getValidPositions(null, board).contains(ctx.getTo()))
+            throw new RuleViolationException("Illegal piece movement.");
+        System.out.println("Validator: Pattern Legality check rule triggered");
+    }
+}
+
+
+===== ./model/game/rule/Rule.java =====
+package org.example.ChessGame.model.game.rule;
+
+import org.example.ChessGame.exception.gameRulesException.RuleViolationException;
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.game.GameContext;
+
+public abstract class Rule{
+
+    private Rule nextRule;
+    
+    public void setNext(Rule nextRule) {
+        this.nextRule = nextRule;
+    }
+
+    public void execute(GameContext ctx, Board board) throws RuleViolationException {
+        validate(ctx, board);
+
+        if(nextRule != null) {
+            nextRule.execute(ctx, board);
+        }
+    }
+
+    protected abstract void validate(GameContext ctx, Board board) throws RuleViolationException;
+}
+
+
+===== ./model/game/gameEvents/MoveEvent.java =====
+package org.example.ChessGame.model.game.gameEvents;
+
+import org.example.ChessGame.model.events.Event;
+import org.example.ChessGame.model.game.move.Move;
+
+public class MoveEvent implements Event {
+    
+    private String message;
+
+    public MoveEvent(Move gameContext) {
+        this.message = gameContext.toString();
+    }
+
+    @Override
+    public String getMessage() {
+        return message;
+    }
+}
+
+
+===== ./model/game/gameEvents/GameEvent.java =====
+package org.example.ChessGame.model.game.gameEvents;
+
+import org.example.ChessGame.model.events.Event;
+
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
+public class GameEvent implements Event {       
+    // publish messages like:
+    // p2 resigned
+    // game ended with a checkmate and x wins 
+    // game ended with a draw
+
+    private String message;
+
+    @Override
+    public String getMessage() {
+        return this.message;
+    }
+}
+
+
+===== ./model/game/gameEvaluator/AttackDetector.java =====
+package org.example.ChessGame.model.game.gameEvaluator;
+
+import java.util.Map;
+import java.util.Set;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.model.piece.Piece;
+import org.example.ChessGame.type.Color;
+
+public class AttackDetector {
+    
+    public boolean isAttacked(Cell kingCell, Color colorToMove, Board board) {
+        Map<? extends Piece, ? extends Cell> piecesCellMap = board.getListOPieces(colorToMove);
+        for (Map.Entry<? extends Piece, ? extends Cell> entry : piecesCellMap.entrySet()) {
+            Piece piece = entry.getKey();
+            Cell from = entry.getValue();
+            Set<Cell> positions = piece.getValidPositions(from, board);
+            if(positions.contains(kingCell))
+                return true;
+        }
+        return false;
+    }
+}
+
+
+===== ./model/game/gameEvaluator/MoveGenerator.java =====
+package org.example.ChessGame.model.game.gameEvaluator;
+
+import java.util.Map;
+import java.util.Set;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.model.piece.Piece;
+import org.example.ChessGame.type.Color;
+
+public class MoveGenerator {
+    public boolean hasAnyLegalMove(Color color,Board board){ 
+        Map<? extends Piece, ? extends Cell> piecesCellMap = board.getListOPieces(color);
+        for (Map.Entry<? extends Piece, ? extends Cell> entry : piecesCellMap.entrySet()) {
+            Piece piece = entry.getKey();
+            Cell from = entry.getValue();
+            Set<Cell> positions = piece.getValidPositions(from, board);
+            if(positions.size() > 0)
+                return true;
+        }
+        return false;
+    }
+}
+
+
+===== ./model/game/gameEvaluator/GameStatusEvaluator.java =====
+package org.example.ChessGame.model.game.gameEvaluator;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.TacticType;
+
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
+public class GameStatusEvaluator {
+    private final AttackDetector attackDetector;
+    private final MoveGenerator moveGenerator; // generates all legal moves for a color
+
+    public TacticType evaluate(Board board, Color colorToMove) {
+        Cell kingCell = board.findKing(colorToMove);
+        boolean inCheck = attackDetector.isAttacked(kingCell, opposite(colorToMove), board);
+        boolean hasLegalMove = moveGenerator.hasAnyLegalMove(colorToMove, board);
+
+        if (inCheck && !hasLegalMove) return TacticType.CHECKMATE;
+        if (!inCheck && !hasLegalMove) return TacticType.STALEMATE;
+        if (inCheck) return TacticType.CHECK;
+        return TacticType.NORMAL;
+    }
+
+    public Color opposite(Color color){
+        return color == Color.BLACK ? Color.WHITE : Color.BLACK;
+    }
+}
+
+
+===== ./model/game/Game.java =====
+package org.example.ChessGame.model.game;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Scanner;
+
+import org.example.ChessGame.factory.MoveFactory;
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.events.EventBus;
+import org.example.ChessGame.model.game.gameEvents.GameEvent;
+import org.example.ChessGame.model.game.gameEvents.MoveEvent;
+import org.example.ChessGame.model.game.move.Move;
+import org.example.ChessGame.model.game.rule.RuleValidator;
+import org.example.ChessGame.model.player.Player;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.GameStatus;
+import org.example.ChessGame.type.MoveType;
+import org.example.ChessGame.utils.NotationUtils;
+
+public class Game {
+    private Board board;
+    private final List<Player> players;
+    private final RuleValidator ruleValidator;
+    private final EventBus eventBus;
+    private Player winner;
+    private GameStatus status;
+    private Integer currentPlayerIndex;
+    private Scanner sc;
+    private List<Board> history;
+    private List<? extends Move> moveHistory;
+    private Color currentColor;
+    
+    // turn manager - (White moes first)
+    // history
+
+    private Game(GameBuilder gameBuilder) {
+        this.status = GameStatus.INITIALIZING;
+        this.board = gameBuilder.board;
+        this.players = gameBuilder.players;
+        this.ruleValidator = gameBuilder.ruleValidator;
+        this.eventBus = gameBuilder.eventBus;
+        this.currentPlayerIndex = 0;
+        this.sc = new Scanner(System.in);
+        Collections.shuffle(players);
+        players.get(0).setColor(Color.WHITE);
+        players.get(1).setColor(Color.BLACK);
+        this.history = new ArrayList<>();
+        this.history.add(board.cloneObject());
+        this.moveHistory = new ArrayList<>();
+        this.moveHistory.add(null);
+        this.status = GameStatus.ON_PROGRESS;
+    }
+
+    public void displayBoard() {
+        System.out.println(board);
+    }
+
+    public void start() {
+        Color currentColor = players.get(currentPlayerIndex).getColor();
+        eventBus.publish(new GameEvent(currentColor +" TO MOVE: " + players.get(currentPlayerIndex).getName() + "'s turn") );
+    }
+
+    public void undo() {
+        history.remove(history.size()-1);
+        this.board = history.get(history.size() - 1);
+        currentPlayerIndex = (currentPlayerIndex + 1) % 2;
+        System.out.println(board);
+    }
+
+    public void evaluateBoardStatus() {
+        // check if oponent is in check
+        // check for stalement
+        // check checkmate
+    }
+
+    public void displayStatus() {
+        
+    }
+
+    public void makeMove() throws Exception {  // make a move
+        Color currentColor = players.get(currentPlayerIndex).getColor();
+        eventBus.publish(new GameEvent(currentColor + " TO MOVE: " + players.get(currentPlayerIndex).getName() + "'s turn"));
+        System.out.println("Please select the position of the piece to move: ");
+        System.out.println("Use U for undo and R to regine");
+        String moveMade = sc.nextLine();
+
+        if(moveMade.equals("U")) {
+            undo();
+            makeMove();
+        }
+
+        if(moveMade.equals("R")) {
+            status = GameStatus.ENDED;
+            int winnerIndex = (currentPlayerIndex + 1) % 2;
+            winner = players.get(winnerIndex);
+            eventBus.publish(new GameEvent(players.get(currentPlayerIndex).getName() + " Regined and the winner is, " + winner.getName()));
+            return;
+        }
+
+        String from = moveMade;
+        System.out.println("Please make a move: ");
+        String to = sc.nextLine();
+
+        GameContext ctx = new GameContext(
+            players.get(currentPlayerIndex), 
+            board.getCell(NotationUtils.getIndex(from)).getPiece(), 
+            board.getCell(NotationUtils.getIndex(from)), 
+            board.getCell(NotationUtils.getIndex(to)), 
+            to,
+            moveHistory.getLast()
+        );
+
+        ruleValidator.validate(ctx, board);
+        this.board.apply(MoveFactory.getMove(MoveType.NORMAL_MOVE, ctx));
+        history.add(board.cloneObject());
+        
+        // eventBus.publish(new MoveEvent(new Move(players.get(currentPlayerIndex), null, null, null, to)));
+    }
+
+    public void advanceTurn() {
+        currentPlayerIndex = (currentPlayerIndex + 1) % 2;
+        Color currentColor = players.get(currentPlayerIndex).getColor();
+        eventBus.publish(new GameEvent(currentColor + " TO MOVE: " + players.get(currentPlayerIndex).getName() + "'s turn") );
+    }
+
+    public GameStatus getStatus(){ return this.status; }
+
+    public void viewReplay() {
+        System.out.println("============= GAME REPLAY ============");
+        for(Board board: history){
+            System.out.println(board);
+            sc.nextLine();
+        }
+    }
+
+    public void getListOfValidMove(String position){    // display list of moves for a selected position
+        
+    }
+
+    public static class GameBuilder {
+        private Board board;
+        private List<Player> players;
+        private RuleValidator ruleValidator;
+        private EventBus eventBus;
+
+        public GameBuilder setBoard(Board board){ this.board = board; return this;}
+        public GameBuilder setPlayers(List<Player> players) throws Exception { if(players.size() != 2) throw new Exception("Exactly 2 players can play the game"); this.players = players; return this;}
+        public GameBuilder setRuleValidator(RuleValidator ruleValidator){ this.ruleValidator = ruleValidator; return this; }
+        public GameBuilder setEventBus(EventBus eventBus) { this.eventBus = eventBus; return this; }
+
+        public Game build() throws IllegalArgumentException {
+            if(
+                board == null ||
+                players == null ||
+                ruleValidator == null ||
+                eventBus == null
+            )
+            throw new IllegalArgumentException();
+            return new Game(this);
+        }
+    }
+}
+
+
+===== ./model/game/GameHistory.java =====
+package org.example.ChessGame.model.game;
+
+import java.util.List;
+import java.util.Stack;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.game.move.Move;
+
+public class GameHistory {
+    private Stack<? extends Board> history;
+    private List<? extends Move> moveHistory;
+}
+
+
+===== ./model/rules/EnpassantRule.java =====
+package org.example.ChessGame.model.rules;
+
+public class EnpassantRule {
+    
+}
+
+
+===== ./model/rules/CheckMateRule.java =====
+package org.example.ChessGame.model.rules;
+
+public class CheckMateRule {
+    
+}
+
+
+===== ./model/rules/CapturingRule.java =====
+package org.example.ChessGame.model.rules;
+
+public class CapturingRule {
+    
+}
+
+
+===== ./model/rules/CastlingRule.java =====
+package org.example.ChessGame.model.rules;
+
+public class CastlingRule {
+    
+}
+
+
+===== ./model/events/SimpleEventBus.java =====
+package org.example.ChessGame.model.events;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.example.genericUtils.Observer.Observer;
+
+public class SimpleEventBus implements EventBus {
+
+    private final Map<Class<? extends Event>, List<Observer<? super Event>>> subscribers =
+            new HashMap<>();
+
+    @Override
+    public <T extends Event> void subscribe(Class<T> eventType, Observer<? super T> observer) {
+        subscribers
+                .computeIfAbsent(eventType, key -> new ArrayList<>())
+                .add((Observer<? super Event>) observer);
+    }
+
+    @Override
+    public <T extends Event> void unsubscribe(Class<T> eventType, Observer<? super T> observer) {
+        List<Observer<? super Event>> observers = subscribers.get(eventType);
+
+        if (observers == null) {
+            return;
+        }
+
+        observers.remove(observer);
+
+        if (observers.isEmpty()) {
+            subscribers.remove(eventType);
+        }
+    }
+
+    @Override
+    public <T extends Event> void publish(T event) {
+        List<Observer<? super Event>> observers =
+                subscribers.get(event.getClass());
+
+        if (observers == null) {
+            return;
+        }
+
+        for (Observer<? super Event> observer : observers) {
+            observer.update(event);
+        }
+    }
+}
+
+===== ./model/events/EventBus.java =====
+package org.example.ChessGame.model.events;
+
+import org.example.genericUtils.Observer.Observer;
+
+public interface EventBus {
+
+    <T extends Event> void subscribe(
+            Class<T> eventType,
+            Observer<? super T> observer);
+
+    <T extends Event> void unsubscribe(
+            Class<T> eventType,
+            Observer<? super T> observer);
+
+    <T extends Event> void publish(T event);
+}
+
+===== ./model/events/Event.java =====
+package org.example.ChessGame.model.events;
+
+public interface Event {
+    String getMessage();
+
+}
+
+
+===== ./model/piece/Knight.java =====
+package org.example.ChessGame.model.piece;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.strategy.movementStrategy.IMovementStrategy;
+import org.example.ChessGame.strategy.movementStrategy.LMovementStrategy;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.PieceType;
+
+public class Knight extends Piece {
+    public Knight(Color color) {
+        super(PieceType.KNIGHT, color, new ArrayList<>(List.of(new LMovementStrategy())));
+    }
+
+    public Knight(Knight other) {
+        super(other);
+    }
+
+    @Override
+    public Piece cloneObject() {
+        return new Knight(this);
+    }
+
+    public String display(){ return getColor() == Color.BLACK ? "BK" : "WK";}
+}
+
+
+===== ./model/piece/Rook.java =====
+package org.example.ChessGame.model.piece;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.strategy.movementStrategy.HorizontalMovementStrategy;
+import org.example.ChessGame.strategy.movementStrategy.IMovementStrategy;
+import org.example.ChessGame.strategy.movementStrategy.VerticalMovementStrategy;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.PieceType;
+
+public class Rook extends Piece {
+
+    private boolean isMoved;
+
+    public Rook(Rook other) {
+        super(other);
+        this.isMoved = other.isMoved;
+    }
+
+    @Override
+    public Piece cloneObject() {
+        return new Rook(this);
+    }
+
+    public Rook(Color color) {
+        super(
+            PieceType.ROOK, 
+            color, 
+            new ArrayList<>(
+                List.of(
+                    new HorizontalMovementStrategy(), 
+                    new VerticalMovementStrategy()
+                )
+            )
+        );
+        this.isMoved = false;
+    }
+
+    public void setIsMoved(){ this.isMoved = true; }
+
+    public boolean isMoved() { return this.isMoved; } 
+
+    @Override
+    public Set<Cell> getValidPositions(Cell from, Board board) {
+        Set<Cell> validPositions = new HashSet<>();
+        for(IMovementStrategy movementStrategie: movementStrategies)
+            validPositions.addAll(movementStrategie.getListOfMoves(from, board));
+        return validPositions;
+    }
+
+
+    public String display(){ return getColor() == Color.BLACK ? "BR" : "WR";}
+}
+
+
+===== ./model/piece/Bishop.java =====
+package org.example.ChessGame.model.piece;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.strategy.movementStrategy.DiagonalMovementStrategy;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.PieceType;
+
+public class Bishop extends Piece{
+    public Bishop(Color color) {
+        super(PieceType.BISHOP, color, new ArrayList<>(List.of(new DiagonalMovementStrategy())));
+    }
+
+    public Bishop(Bishop other) {
+        super(other);
+    }
+
+    @Override
+    public Piece cloneObject() {
+        return new Bishop(this);
+    }
+
+    public String display(){ return getColor() == Color.BLACK ? "BB" : "WB";}
+}
+
+
+===== ./model/piece/Queen.java =====
+package org.example.ChessGame.model.piece;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.strategy.movementStrategy.DiagonalMovementStrategy;
+import org.example.ChessGame.strategy.movementStrategy.HorizontalMovementStrategy;
+import org.example.ChessGame.strategy.movementStrategy.IMovementStrategy;
+import org.example.ChessGame.strategy.movementStrategy.VerticalMovementStrategy;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.PieceType;
+
+public class Queen extends Piece {
+    public Queen(Color color) {
+        super(
+            PieceType.QUEEN, 
+            color, 
+            new ArrayList<>(
+                List.of(
+                    new DiagonalMovementStrategy(), 
+                    new HorizontalMovementStrategy(), 
+                    new VerticalMovementStrategy()
+                )
+            )
+        );
+    }
+
+    public Queen(Queen other) {
+        super(other);
+    }
+
+    @Override
+    public Piece cloneObject() {
+        return new Queen(this);
+    }
+
+    @Override
+    public Set<Cell> getValidPositions(Cell from, Board board) {
+        Set<Cell> validPositions = new HashSet<>();
+        for(IMovementStrategy movementStrategie: movementStrategies)
+            validPositions.addAll(movementStrategie.getListOfMoves(from, board));
+        return validPositions;
+    }
+
+
+    public String display(){ return getColor() == Color.BLACK ? "BQ" : "WQ";}
+}
+
+
+===== ./model/piece/King.java =====
+package org.example.ChessGame.model.piece;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.strategy.movementStrategy.IMovementStrategy;
+import org.example.ChessGame.strategy.movementStrategy.KingMovementStrategy;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.PieceType;
+
+public class King extends Piece {
+    private boolean isMoved;
+
+    public King(Color color) {
+        super(PieceType.KING, color, new ArrayList<>(List.of(new KingMovementStrategy())));
+    }
+
+    public King(King other) {
+        super(other);
+    }
+
+    public void setIsMoved() { isMoved = true;}
+
+    public boolean getIsMoved() { return this.isMoved; }
+
+    @Override
+    public Piece cloneObject() {
+        return new King(this);
+    }
+
+    public String display(){ return getColor() == Color.BLACK ? "B+" : "W+";}
+}
+
+
+===== ./model/piece/Piece.java =====
+package org.example.ChessGame.model.piece;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.strategy.movementStrategy.IMovementStrategy;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.PieceType;
+import org.example.genericUtils.interfaces.Clonable;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@AllArgsConstructor
+@Getter
+public abstract class Piece implements Clonable<Piece> {
+    private final PieceType type;
+    private final Color color;
+    protected final List<IMovementStrategy> movementStrategies;
+
+    public Piece(Piece other) {
+        this.type = other.type;
+        this.color = other.color;
+        this.movementStrategies = other.movementStrategies;
+    }
+
+    public Set<Cell> getValidPositions(Cell from, Board board) {
+        Set<Cell> validPositions = new HashSet<>();
+        for(IMovementStrategy movementStrategie: movementStrategies)
+            validPositions.addAll(movementStrategie.getListOfMoves(from, board));
+        return validPositions;
+    }
+    public abstract String display();
+}
+
+
+===== ./model/piece/Pawn.java =====
+package org.example.ChessGame.model.piece;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.strategy.movementStrategy.PawnMovementStrategy;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.PieceType;
+
+public class Pawn extends Piece {
+
+    public Pawn(Color color) {
+        super(PieceType.PAWN, color, new ArrayList<>(List.of(new PawnMovementStrategy())));
+    }
+
+    public Pawn(Pawn other) {
+        super(other);
+    }
+
+    @Override
+    public Piece cloneObject() {
+        return new Pawn(this);
+    }
+
+    public String display(){ return getColor() == Color.BLACK ? "BP" : "WP";}
+}
+
+
+===== ./model/player/Player.java =====
+package org.example.ChessGame.model.player;
+
+import org.example.ChessGame.model.events.Event;
+import org.example.ChessGame.type.Color;
+import org.example.genericUtils.Observer.Observer;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@AllArgsConstructor
+@Getter
+public class Player implements Observer<Event> {
+
+    private final String name;
+    private Color color;
+
+    public String getName(){ return this.name;}
+
+    public void setColor(Color color) { this.color = color; }
+
+    @Override
+    public void update(Event event) {
+        System.out.println(name + ": " + event.getMessage());
+    }
+    
+}
+
+
+===== ./App.java =====
+package org.example.ChessGame;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+import org.example.ChessGame.exception.gameRulesException.IllegalMoveException;
+import org.example.ChessGame.exception.gameRulesException.RuleViolationException;
+import org.example.ChessGame.model.board.StandardBoard;
+import org.example.ChessGame.model.events.EventBus;
+import org.example.ChessGame.model.events.SimpleEventBus;
+import org.example.ChessGame.model.game.Game;
+import org.example.ChessGame.model.game.gameEvents.GameEvent;
+import org.example.ChessGame.model.game.gameEvents.MoveEvent;
+import org.example.ChessGame.model.game.rule.PatternLeagalityRule;
+import org.example.ChessGame.model.game.rule.PieceExistanceRule;
+import org.example.ChessGame.model.game.rule.Rule;
+import org.example.ChessGame.model.game.rule.RuleValidator;
+import org.example.ChessGame.model.game.rule.SelfCheckRule;
+import org.example.ChessGame.model.game.rule.TurnCheckRule;
+import org.example.ChessGame.model.player.Player;
+import org.example.ChessGame.type.GameStatus;
+import org.example.ChessGame.model.logger.Logger;
+
+public class App {
+
+    public static void main(String[] args) {
+        Player p1 = new Player("BOB", null);
+        Player p2 = new Player("Alice", null);
+        Logger logger = new Logger();
+
+        EventBus eventBus = new SimpleEventBus();
+
+        eventBus.subscribe(GameEvent.class, p1);  // p1
+        eventBus.subscribe(GameEvent.class, p2);  // p2
+        eventBus.subscribe(GameEvent.class, logger);  // logger
+        
+        eventBus.subscribe(MoveEvent.class, p1);  // p1
+        eventBus.subscribe(MoveEvent.class, p2);  // p2
+        eventBus.subscribe(MoveEvent.class, logger);  // logger
+
+        
+
+        List<Player> players = new ArrayList<>(List.of(p1,p2));
+
+        Rule pieceExistanceRule = new PieceExistanceRule();
+        Rule checkTurn = new TurnCheckRule();
+        Rule patternLegalityRule = new PatternLeagalityRule();
+        Rule selfCheckRule = new SelfCheckRule();
+
+        pieceExistanceRule.setNext(checkTurn);
+        checkTurn.setNext(patternLegalityRule);
+        patternLegalityRule.setNext(selfCheckRule);
+
+
+
+        try {
+            eventBus.publish(new GameEvent("Initializing the game..."));
+            
+            Game game = new Game.GameBuilder()
+                                    .setBoard(new StandardBoard())
+                                    .setPlayers(players)
+                                    .setRuleValidator(new RuleValidator(pieceExistanceRule))
+                                    .setEventBus(eventBus)
+                                    .build();
+            
+             
+            
+            eventBus.publish(new GameEvent("Game is Initialized Successfully and it is ready to play."));
+            eventBus.publish(new GameEvent("Current Game State: " + game.getStatus()));
+
+            game.start();
+            game.displayBoard();
+
+            while(game.getStatus() == GameStatus.ON_PROGRESS) {
+
+                try {
+                    game.makeMove();
+                    game.displayBoard();
+                    game.evaluateBoardStatus();
+
+                    if(game.getStatus() == GameStatus.ON_PROGRESS)
+                        game.advanceTurn();
+                } catch (IllegalMoveException e) {
+                   System.out.println(e.getMessage());
+                } catch (RuleViolationException e) {
+                    System.out.println(e.getMessage());
+                }
+            }
+
+            game.displayStatus();
+
+            System.out.println("Do you want to view replay? type (Y) for yes.");
+            Scanner sc = new Scanner(System.in);
+            String input = sc.nextLine();
+            if(input.equals("Y"))
+                game.viewReplay();
+            sc.close();
+            
+            System.out.println("\n\n=========== GAME LOGS =============");
+            logger.displayLogs();
+
+        } catch (Exception e) {
+            // notifyObserver(e.getMessage());
+            eventBus.publish(new GameEvent("ERROR: " + e.getMessage()));
+        }
+
+    }
+}
+
+===== ./exception/gameRulesException/IllegalMoveException.java =====
+package org.example.ChessGame.exception.gameRulesException;
+
+public class IllegalMoveException extends Exception {
+    public IllegalMoveException() {
+        super("Illegal Move: " + "This is not a leagal move");
+    }
+
+    public IllegalMoveException(String message) {
+        super("Illegal Move: " + message);
+    }
+}
+
+
+===== ./exception/gameRulesException/RuleViolationException.java =====
+package org.example.ChessGame.exception.gameRulesException;
+
+public class RuleViolationException extends Exception {
+    
+    public RuleViolationException() {
+        super("GAME RULE VIOLATION: " + "This action is against the game rules");
+    }
+
+    public RuleViolationException(String message) {
+        super("GAME RULE VIOLATION: " + message);
+    }
+}
+
+
+===== ./exception/pieceCreationException/IllegalPieceCreationException.java =====
+package org.example.ChessGame.exception.pieceCreationException;
+
+public class IllegalPieceCreationException extends Exception {
+    public IllegalPieceCreationException(){
+        super("Illeagal Piece Creation: " + "No such piece exist in our system");
+    }
+
+    public IllegalPieceCreationException(String message){
+        super("Illeagal Piece Creation: " + message);
+    }
+}
+
+
+===== ./output.txt =====
+
+
+===== ./factory/PieceFactory.java =====
+package org.example.ChessGame.factory;
+
+import org.example.ChessGame.exception.pieceCreationException.IllegalPieceCreationException;
+import org.example.ChessGame.model.piece.Bishop;
+import org.example.ChessGame.model.piece.King;
+import org.example.ChessGame.model.piece.Knight;
+import org.example.ChessGame.model.piece.Pawn;
+import org.example.ChessGame.model.piece.Piece;
+import org.example.ChessGame.model.piece.Queen;
+import org.example.ChessGame.model.piece.Rook;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.type.PieceType;
+
+public final class PieceFactory {
+
+    public static Piece create(PieceType type, Color color) throws IllegalPieceCreationException {
+        switch (type) {
+            case PAWN:
+                return new Pawn(color);
+            case KNIGHT:
+                return new Knight(color);
+            case BISHOP:
+                return new Bishop(color);
+            case ROOK:
+                return new Rook(color);
+            case KING:
+                return new King(color);
+            case QUEEN:
+                return new Queen(color);
+            default:
+                throw new IllegalPieceCreationException();
+        }
+    }
+
+    public static void viewGuide() {
+        System.out.println("Select piece by entering the value within the bracket: \nPawn(P) \nKnight(N) \nBishop(B) \nRook(R) \nQueen(Q)");
+    }
+
+    public static PieceType pieceTypeResolver(String ch) throws IllegalPieceCreationException {
+
+        switch (ch) {
+            case "P": return PieceType.PAWN;
+            case "N": return PieceType.KNIGHT;
+            case "B": return PieceType.BISHOP;
+            case "R": return PieceType.ROOK;
+            case "Q": return PieceType.QUEEN;
+            default:
+                throw new IllegalPieceCreationException();
+        }
+    }
+}
+
+
+===== ./factory/MoveFactory.java =====
+package org.example.ChessGame.factory;
+
+import org.example.ChessGame.exception.gameRulesException.IllegalMoveException;
+import org.example.ChessGame.exception.pieceCreationException.IllegalPieceCreationException;
+import org.example.ChessGame.model.game.GameContext;
+import org.example.ChessGame.model.game.move.CastelingMove;
+import org.example.ChessGame.model.game.move.EnPassantMove;
+import org.example.ChessGame.model.game.move.Move;
+import org.example.ChessGame.model.game.move.NormalMove;
+import org.example.ChessGame.model.game.move.PromotionMove;
+import org.example.ChessGame.type.MoveType;
+
+public final class MoveFactory {
+    public static Move getMove(MoveType type, GameContext ctx) throws IllegalMoveException {
+        switch (type) {
+            case NORMAL_MOVE: return new NormalMove(ctx);
+            case ENPASSANT_MOVE: return new EnPassantMove(ctx);
+            case PROMOTION_MOVE: 
+                try {
+                    return new PromotionMove(ctx);
+                } catch (IllegalPieceCreationException e) {
+                    throw new IllegalMoveException(e.getMessage());
+                }
+            case CASTELING_KING_SIDE: return new CastelingMove(ctx, MoveType.CASTELING_KING_SIDE);
+            case CASTELING_QUEEN_SIDE: return new CastelingMove(ctx, MoveType.CASTELING_QUEEN_SIDE);
+            
+            default:
+                throw new IllegalMoveException();
+        }
+    }
+}
+
+
+===== ./strategy/movementStrategy/PawnMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.utils.NotationUtils;
+
+public class PawnMovementStrategy implements IMovementStrategy {
+
+    private static final int[][] CAPTURE_DIRECTIONS = {
+        {0, 1},
+        {0, -1}
+    };
+
+    @Override
+    public List<Cell> getListOfMoves(Cell from, Board board) {
+
+        List<Cell> moves = new ArrayList<>();
+
+        Color color = from.getPiece().getColor();
+
+        int rank = from.getRank();
+        int file = from.getFile();
+
+        int direction = color == Color.WHITE ? 1 : -1;
+
+        // 1. Forward one square
+        Cell forward = NotationUtils.resolve(
+                board,
+                rank + direction,
+                file
+        );
+
+        if (forward != null && forward.getPiece() == null) {
+            moves.add(forward);
+
+            // 2. Forward two squares
+            if (isOnStartingRank(from, color)) {
+
+                Cell doubleForward = NotationUtils.resolve(
+                        board,
+                        rank + (2 * direction),
+                        file
+                );
+
+                if (doubleForward != null
+                        && doubleForward.getPiece() == null) {
+                    moves.add(doubleForward);
+                }
+            }
+        }
+
+        // 3. Diagonal captures
+        for (int[] captureDirection : CAPTURE_DIRECTIONS) {
+
+            int newRank = rank + direction;
+            int newFile = file + captureDirection[1];
+
+            Cell cell = NotationUtils.resolve(
+                    board,
+                    newRank,
+                    newFile
+            );
+
+            if (canCapture(cell, color)) {
+                moves.add(cell);
+            }
+        }
+
+        return moves;
+    }
+
+    private boolean isOnStartingRank(Cell from, Color color) {
+
+        // Change these according to your board representation.
+        return color == Color.WHITE
+                ? from.getRank() == 2
+                : from.getRank() == 7;
+    }
+
+    private boolean canCapture(Cell cell, Color color) {
+
+        if (cell == null || cell.getPiece() == null) {
+            return false;
+        }
+
+        return cell.getPiece().getColor() != color;
+    }
+
+    @Override
+    public boolean isValid(Cell cell, Color color) {
+
+        if (cell == null) {
+            return false;
+        }
+
+        return cell.getPiece() == null
+                || cell.getPiece().getColor() != color;
+    }
+}
+
+===== ./strategy/movementStrategy/HorizontalMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.utils.NotationUtils;
+
+public class HorizontalMovementStrategy implements IMovementStrategy {
+    
+    private final static int[][] directions = {{0,1},{0,-1}};
+    private Cell previousCell = null;
+    private int rank;
+
+    @Override
+    public List<Cell> getListOfMoves(Cell from, Board board) {
+        List<Cell> to = new ArrayList<>();
+        int rank = from.getRank();  // row
+        int file = from.getFile();  // col
+        this.rank = rank;
+
+        for(int[] direction: directions) {
+            int newRank = rank + direction[0];
+            int newFile = file + direction[1];
+
+            Cell cell = NotationUtils.resolve(board, newRank, newFile);
+
+            previousCell = null;
+
+            while(isValid(cell, from.getPiece().getColor())) {
+                to.add(cell);
+
+                previousCell = cell;
+
+                newRank = newRank + direction[0];
+                newFile = newFile + direction[1];
+                
+                if(cell.getPiece() != null)
+                    break;
+
+                cell = NotationUtils.resolve(board, newRank, newFile);
+            }
+        }
+        return to;
+    }
+
+    @Override
+    public boolean isValid(Cell cell, Color color) {
+        boolean valid = true;
+        valid &= cell != null;  // cell is not null
+        valid &= (cell.getPiece() == null || cell.getPiece().getColor() != color);  // no same color piece
+        valid &= (previousCell == null || previousCell.getPiece() == null);
+        valid &= cell.getRank() == rank;    // check for same rank
+        return valid;
+    }
+
+}
+
+
+===== ./strategy/movementStrategy/IMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.type.Color;
+
+public interface IMovementStrategy {
+    List<Cell> getListOfMoves(Cell from, Board board);
+    boolean isValid(Cell cell, Color color);
+}
+
+
+===== ./strategy/movementStrategy/LMovementStrategy.java =====
+
+package org.example.ChessGame.strategy.movementStrategy;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.utils.NotationUtils;
+
+public class LMovementStrategy implements IMovementStrategy {
+
+    private final static int[][] directions = {{2,1}, {2,-1}, {-2,1}, {-2,-1}, {-1,-2}, {-1,2}, {1,-2}, {1,2}};
+
+    @Override
+    public List<Cell> getListOfMoves(Cell from, Board board) {
+        List<Cell> to = new ArrayList<>();
+        int rank = from.getRank();  // row
+        int file = from.getFile();  // col
+        for(int[] direction: directions) {
+            int newRank = rank + direction[0];
+            int newFile = file + direction[1];
+
+            Cell cell = NotationUtils.resolve(board, newRank, newFile);
+            if(isValid(cell, from.getPiece().getColor()))
+                to.add(cell);
+        }
+        return to;
+    }
+
+    @Override
+    public boolean isValid(Cell cell, Color color) {
+        boolean valid = true;
+        valid &= (cell != null);
+        valid &= (cell.getPiece() == null || cell.getPiece().getColor() != color);
+        return valid;
+    }
+}
+
+===== ./strategy/movementStrategy/DiagonalMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.utils.NotationUtils;
+
+public class DiagonalMovementStrategy implements IMovementStrategy{
+
+    private final static int[][] directions = {{1,1}, {1,-1}, {-1,-1}, {-1,1}};
+    private Cell previous = null;
+
+    @Override
+    public List<Cell> getListOfMoves(Cell from, Board board) {
+        List<Cell> to = new ArrayList<>();
+        int rank = from.getRank();  // row
+        int file = from.getFile();  // col
+        for(int[] direction: directions) {
+            int newRank = rank + direction[0];
+            int newFile = file + direction[1];
+            previous = null;
+
+            Cell cell = NotationUtils.resolve(board, newRank, newFile);
+
+            while(!isValid(cell, from.getPiece().getColor())) {
+                to.add(cell);
+                
+                previous = cell;
+
+                newRank = newRank + direction[0];
+                newFile = newFile + direction[1];
+
+                cell = NotationUtils.resolve(board, newRank, newFile);
+            }
+        }
+        return to;
+    }
+
+    @Override
+    public boolean isValid(Cell cell, Color color) {
+        boolean valid = true;
+        valid &= cell != null;
+        valid &= (cell.getPiece() == null || cell.getPiece().getColor() != color);
+        valid &= (previous == null || previous.getPiece() == null);
+        return valid;
+    }
+}
+
+
+===== ./strategy/movementStrategy/KingMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.utils.NotationUtils;
+
+public class KingMovementStrategy implements IMovementStrategy {
+
+    private static final int[][] DIRECTIONS = {
+        {1, 1},   {1, 0},   {1, -1},
+        {0, 1},            {0, -1},
+        {-1, 1},  {-1, 0}, {-1, -1}
+    };
+
+    @Override
+    public List<Cell> getListOfMoves(Cell from, Board board) {
+
+        List<Cell> moves = new ArrayList<>();
+
+        int rank = from.getRank();
+        int file = from.getFile();
+        Color color = from.getPiece().getColor();
+
+        for (int[] direction : DIRECTIONS) {
+
+            int newRank = rank + direction[0];
+            int newFile = file + direction[1];
+
+            Cell cell = NotationUtils.resolve(board, newRank, newFile);
+
+            if (isValid(cell, color)) {
+                moves.add(cell);
+            }
+        }
+
+        return moves;
+    }
+
+    @Override
+    public boolean isValid(Cell cell, Color color) {
+
+        if (cell == null) {
+            return false;
+        }
+
+        return cell.getPiece() == null
+                || cell.getPiece().getColor() != color;
+    }
+}
+
+===== ./strategy/movementStrategy/VerticalMovementStrategy.java =====
+package org.example.ChessGame.strategy.movementStrategy;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.board.Cell;
+import org.example.ChessGame.type.Color;
+import org.example.ChessGame.utils.NotationUtils;
+
+public class VerticalMovementStrategy implements IMovementStrategy {
+    
+    private final static int[][] directions = {{1,1}, {1,-1}, {-1,-1}, {-1,1}};
+    private Cell previous = null;
+    private int file;
+
+    @Override
+    public List<Cell> getListOfMoves(Cell from, Board board) {
+        List<Cell> to = new ArrayList<>();
+        int rank = from.getRank();  // row
+        int file = from.getFile();  // col
+
+        this.file = file;
+        
+        for(int[] direction: directions) {
+            int newRank = rank + direction[0];
+            int newFile = file + direction[1];
+            previous = null;
+
+            Cell cell = NotationUtils.resolve(board, newRank, newFile);
+
+            while(!isValid(cell, from.getPiece().getColor())) {
+                to.add(cell);
+
+                previous = cell;
+
+                newRank = newRank + direction[0];
+                newFile = newFile + direction[1];
+
+                cell = NotationUtils.resolve(board, newRank, newFile);
+            }
+        }
+        return to;
+    }
+
+    @Override
+    public boolean isValid(Cell cell, Color color) {
+        boolean valid = true;
+        valid &= cell != null;
+        valid &= (cell.getPiece() == null || cell.getPiece().getColor() != color);
+        valid &= (previous == null || previous.getPiece() == null);
+        valid &= cell.getFile() == this.file;   // check is in same file;
+        return valid;
+    }
+
+}
+
+

@@ -27,4 +27,12 @@ public final class NotationUtils {
     public static Cell resolve(Board board, String notation) {
         return board.getCell(getIndex(rank(notation), file(notation)));
     }
+
+    public static Cell resolve(Board board, Integer row, Integer col) {
+        try {
+            return board.getCell(getIndex(row, col));
+        } catch (Exception e) {     // index out of bound
+            return null;
+        }
+    }
 }

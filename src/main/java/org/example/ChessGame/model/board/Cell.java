@@ -5,8 +5,10 @@ import org.example.ChessGame.type.CellType;
 import org.example.genericUtils.interfaces.Clonable;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 @AllArgsConstructor
+@Getter
 public class Cell implements Clonable<Cell> {
     private Piece piece;
     private final CellType type;  // Dark square or Light square
