@@ -2,7 +2,7 @@ package org.example.ChessGame.model.game.rule;
 
 import org.example.ChessGame.exception.gameRulesException.RuleViolationException;
 import org.example.ChessGame.model.board.Board;
-import org.example.ChessGame.model.game.move.Move;
+import org.example.ChessGame.model.game.GameContext;
 
 public abstract class Rule{
 
@@ -12,13 +12,13 @@ public abstract class Rule{
         this.nextRule = nextRule;
     }
 
-    public void execute(Move move, Board board) throws RuleViolationException {
-        validate(move, board);
-
+    public void execute(GameContext ctx, Board board) throws Exception {
+        validate(ctx, board);
         if(nextRule != null) {
-            nextRule.execute(move, board);
+
+            nextRule.execute(ctx, board);
         }
     }
 
-    protected abstract void validate(Move move, Board board) throws RuleViolationException;
+    protected abstract void validate(GameContext ctx, Board board) throws Exception;
 }

@@ -1,5 +1,6 @@
 package org.example.ChessGame.utils;
 
+import org.example.ChessGame.exception.boardExceptions.CellOutOfBoundException;
 import org.example.ChessGame.model.board.Board;
 import org.example.ChessGame.model.board.Cell;
 
@@ -28,7 +29,7 @@ public final class NotationUtils {
         return row * 8 + col;
     }
 
-    public static Cell resolve(Board board, String notation) {
+    public static Cell resolve(Board board, String notation) throws CellOutOfBoundException {
         return board.getCell(getIndex(rank(notation), file(notation)));
     }
 

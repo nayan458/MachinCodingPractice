@@ -82,6 +82,5 @@ public abstract class Board implements Clonable<Board> {
         if(color == Color.WHITE)
             whiteCastelingRights.revokeQueenSideCastelingRight();
     }
-
     
 }

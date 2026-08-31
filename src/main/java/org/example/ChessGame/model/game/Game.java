@@ -108,9 +108,9 @@ public class Game {
             moveHistory.getLast()
         );
 
+        ruleValidator.validate(ctx, board);
+
         Move move = MoveFactory.getMove(MoveTypeEvaluator.evaluateMoveType(ctx),ctx);
-        
-        ruleValidator.validate(move, board);
 
         move.apply(board);
         

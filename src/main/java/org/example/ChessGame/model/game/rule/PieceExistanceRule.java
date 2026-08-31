@@ -2,13 +2,13 @@ package org.example.ChessGame.model.game.rule;
 
 import org.example.ChessGame.exception.gameRulesException.RuleViolationException;
 import org.example.ChessGame.model.board.Board;
-import org.example.ChessGame.model.game.move.Move;
+import org.example.ChessGame.model.game.GameContext;
 
 public class PieceExistanceRule extends Rule {
     @Override
-    protected void validate(Move move, Board board) throws RuleViolationException {
+    protected void validate(GameContext ctx, Board board) throws RuleViolationException {
         System.out.println("Validator: Piece Existance check rule triggered");
-        if(move.getFrom().getPiece() == null)
+        if(ctx.getFrom().getPiece() == null)
             throw new RuleViolationException("Cannot select a empty cell");
         System.out.println("Piece Existence Rule: Passed ✅ ");
     }

@@ -1,6 +1,7 @@
 ===== ./utils/NotationUtils.java =====
 package org.example.ChessGame.utils;
 
+import org.example.ChessGame.exception.boardExceptions.CellOutOfBoundException;
 import org.example.ChessGame.model.board.Board;
 import org.example.ChessGame.model.board.Cell;
 
@@ -29,7 +30,7 @@ public final class NotationUtils {
         return row * 8 + col;
     }
 
-    public static Cell resolve(Board board, String notation) {
+    public static Cell resolve(Board board, String notation) throws CellOutOfBoundException {
         return board.getCell(getIndex(rank(notation), file(notation)));
     }
 
@@ -70,6 +71,9 @@ public final class MoveTypeEvaluator {
         Piece piece = ctx.getPiece();
         Cell from = ctx.getFrom();
         Cell to = ctx.getTo();
+
+        if(piece == null)
+
         // Casteling enpausent promotion
 
         // King related moves
@@ -467,7 +471,6 @@ public abstract class Board implements Clonable<Board> {
         return pieces;
     }
 
-
     public void revokeCastelingRights(Color color) {
         revokeKingSideCastelingRights(color);
         revokeQueenSideCastelingRights(color);
@@ -486,6 +489,8 @@ public abstract class Board implements Clonable<Board> {
         if(color == Color.WHITE)
             whiteCastelingRights.revokeQueenSideCastelingRight();
     }
+
+    
 }
 
 
@@ -1803,6 +1808,20 @@ public class InvalidGameException extends Exception {
 
     public InvalidGameException (String message) {
         super("INVALID GAME EXCEPTION: " + message);
+    }
+}
+
+
+===== ./exception/boardExceptions/CellOutOfBoundException.java =====
+package org.example.ChessGame.exception.boardExceptions;
+
+public class CellOutOfBoundException extends Exception {
+    public CellOutOfBoundException() {
+        super("CellOutOfBoundException: Please select a valid cell index.");
+    }
+
+    public CellOutOfBoundException(String message) {
+        super("CellOutOfBoundException: " + message);
     }
 }
 

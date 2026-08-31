@@ -12,6 +12,9 @@ public final class MoveTypeEvaluator {
         Piece piece = ctx.getPiece();
         Cell from = ctx.getFrom();
         Cell to = ctx.getTo();
+
+        if(piece == null)
+
         // Casteling enpausent promotion
 
         // King related moves
