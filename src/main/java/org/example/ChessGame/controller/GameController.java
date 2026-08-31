@@ -26,7 +26,32 @@ public class GameController {
             gameService.makeMove(game);
         } catch (Exception e) {
             System.out.println(e.getMessage());
-        } 
+        }
+    }
+
+    public String promptAction(Game game) {
+        try {
+            return gameService.promptAction(game);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return "";
+        }
+    }
+
+    public void undo(Game game) {
+        try {
+            gameService.undo(game);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void resign(Game game) {
+        try {
+            gameService.resign(game);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     public void displayBoard(Game game) { 

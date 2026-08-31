@@ -67,11 +67,23 @@ public class Game {
         eventBus.publish(new GameEvent(currentColor +" TO MOVE: " + players.get(currentPlayerIndex).getName() + "'s turn") );
     }
 
+    public boolean canUndo() {
+        return history.size() > 1;
+    }
+
     public void undo() {
         history.remove(history.size()-1);
         this.board = history.get(history.size() - 1);
         currentPlayerIndex = (currentPlayerIndex + 1) % 2;
-        System.out.println(board);
+        this.currentColor = players.get(currentPlayerIndex).getColor();
+        eventBus.publish(new GameEvent("Move undone. " + currentColor + " TO MOVE: " + players.get(currentPlayerIndex).getName() + "'s turn"));
+        displayBoard();
+    }
+
+    public String promptAction() {
+        System.out.println("\nChoose an option: 1) Move  2) Resign  3) Undo last move");
+        System.out.print("Enter choice: ");
+        return sc.nextLine().trim();
     }
 
     public TacticType evaluateBoardStatus() {

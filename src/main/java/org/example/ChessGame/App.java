@@ -76,8 +76,16 @@ public class App {
             gameController.startGame(game);
 
             while(gameController.getStatus(game) == GameStatus.ON_PROGRESS) {
-                gameController.makeMove(game);
-                gameController.displayBoard(game);
+                String choice = gameController.promptAction(game);
+
+                switch (choice) {
+                    case "2" -> gameController.resign(game);
+                    case "3" -> gameController.undo(game);
+                    default -> {
+                        gameController.makeMove(game);
+                        gameController.displayBoard(game);
+                    }
+                }
             }
 
             gameController.displayStatus(game);

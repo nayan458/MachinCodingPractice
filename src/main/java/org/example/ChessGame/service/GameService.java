@@ -33,7 +33,7 @@ public class GameService {
     }
 
     public void displayStatus(Game game) throws Exception {
-        if(game.getStatus() != GameStatus.ON_PROGRESS)
+        if(game.getStatus() != GameStatus.ON_PROGRESS && game.getStatus() != GameStatus.ENDED)
             throw new InvalidGameException();
         System.out.println(game.getStatus());
     }
@@ -60,11 +60,23 @@ public class GameService {
         sc.close();
     }
 
-    public void undo(Game game) {
+    public String promptAction(Game game) throws Exception {
+        if(game.getStatus() != GameStatus.ON_PROGRESS)
+            throw new InvalidGameException();
+        return game.promptAction();
+    }
+
+    public void undo(Game game) throws Exception {
+        if(game.getStatus() != GameStatus.ON_PROGRESS)
+            throw new InvalidGameException();
+        if(!game.canUndo())
+            throw new Exception("No move available to undo.");
         game.undo();
     }
 
-    public void resign(Game game) {
+    public void resign(Game game) throws Exception {
+        if(game.getStatus() != GameStatus.ON_PROGRESS)
+            throw new InvalidGameException();
         game.resign();
     }
 
