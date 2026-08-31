@@ -11,12 +11,12 @@ import lombok.Getter;
 
 @Getter
 public abstract class Move {
-    private final Player player;
-    private final Piece piece;
-    private final Cell from;
-    private final Cell to;
-    private final String move;
-    private Piece CapturedPiece;
+    protected final Player player;
+    protected final Piece piece;
+    protected final Cell from;
+    protected final Cell to;
+    protected final String move;
+    protected Piece CapturedPiece;
 
     public Move(GameContext ctx) {
         this.player = ctx.getPlayer();
@@ -35,6 +35,6 @@ public abstract class Move {
         // return Player.getColor() + Player.getName() + " moved " + Piece.getType() ;
     }
 
-    public abstract boolean isPatterLegal();
+    public abstract boolean isPatterLegal(Board board);
     public abstract void apply(Board board);
 }

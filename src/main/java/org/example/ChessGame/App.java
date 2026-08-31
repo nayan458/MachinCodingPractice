@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import org.example.ChessGame.controller.GameController;
 import org.example.ChessGame.exception.gameRulesException.IllegalMoveException;
 import org.example.ChessGame.exception.gameRulesException.RuleViolationException;
 import org.example.ChessGame.model.board.StandardBoard;
@@ -19,6 +20,7 @@ import org.example.ChessGame.model.game.rule.RuleValidator;
 import org.example.ChessGame.model.game.rule.SelfCheckRule;
 import org.example.ChessGame.model.game.rule.TurnCheckRule;
 import org.example.ChessGame.model.player.Player;
+import org.example.ChessGame.service.GameService;
 import org.example.ChessGame.type.GameStatus;
 import org.example.ChessGame.model.logger.Logger;
 
@@ -64,39 +66,26 @@ public class App {
                                     .setEventBus(eventBus)
                                     .build();
             
-             
+            GameService gamesService = new GameService();
+
+            GameController gameController = new GameController(gamesService);
             
             eventBus.publish(new GameEvent("Game is Initialized Successfully and it is ready to play."));
             eventBus.publish(new GameEvent("Current Game State: " + game.getStatus()));
 
-            game.start();
-            game.displayBoard();
+            gameController.startGame(game);
+            gameController.displayBoard(game);
 
-            while(game.getStatus() == GameStatus.ON_PROGRESS) {
 
-                try {
-                    game.makeMove();
-                    game.displayBoard();
-                    game.evaluateBoardStatus();
-
-                    if(game.getStatus() == GameStatus.ON_PROGRESS)
-                        game.advanceTurn();
-                } catch (IllegalMoveException e) {
-                   System.out.println(e.getMessage());
-                } catch (RuleViolationException e) {
-                    System.out.println(e.getMessage());
-                }
+            while(gameController.getStatus(game) == GameStatus.ON_PROGRESS) {
+                gameController.displayBoard(game);
+                gameController.makeMove(game);
             }
 
-            game.displayStatus();
+            gameController.displayStatus(game);
 
-            System.out.println("Do you want to view replay? type (Y) for yes.");
-            Scanner sc = new Scanner(System.in);
-            String input = sc.nextLine();
-            if(input.equals("Y"))
-                game.viewReplay();
-            sc.close();
-            
+            gameController.viewReplay(game);
+
             System.out.println("\n\n=========== GAME LOGS =============");
             logger.displayLogs();
 

@@ -1,7 +1,6 @@
 package org.example.ChessGame.model.board;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import org.example.ChessGame.factory.PieceFactory;
@@ -12,7 +11,7 @@ import org.example.ChessGame.type.PieceType;
 public class StandardBoard extends Board {
 
     public StandardBoard() {
-        super(new ArrayList<>());
+        super(new ArrayList<>(), new CastelingRights(), new CastelingRights(), 8 );
         try {
             // create all the cells
             for(int rank = 0; rank < 8; rank++){
@@ -65,17 +64,20 @@ public class StandardBoard extends Board {
         }
     }
 
-    public StandardBoard(List<Cell> cells) {
+    public StandardBoard(StandardBoard board) {
         super(
-            cells.stream()
+            board.cells.stream()
                 .map(Cell::cloneObject)
-                .collect(Collectors.toCollection(ArrayList::new))
+                .collect(Collectors.toCollection(ArrayList::new)),
+                board.whiteCastelingRights.cloneObject(),
+                board.blackCastelingRights.cloneObject(),
+                board.getSize()
         );
     }
 
     @Override
     public Board cloneObject() {
-        return new StandardBoard(this.cells);
+        return new StandardBoard(this);
     }
 }
 

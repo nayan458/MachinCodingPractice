@@ -11,10 +11,15 @@ import org.example.ChessGame.model.piece.King;
 import org.example.ChessGame.model.piece.Piece;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 @AllArgsConstructor
+@Getter
 public abstract class Board implements Clonable<Board> {
     protected List<Cell> cells;
+    protected CastelingRights whiteCastelingRights;
+    protected CastelingRights blackCastelingRights;
+    protected int size;
 
     @Override
     public String toString() {
@@ -39,11 +44,6 @@ public abstract class Board implements Clonable<Board> {
         //     // TODO: handle exception
         // }
         return cells.get(cellNumber);
-    }
-
-    public void apply(Move move) {
-        move.getTo().setPiece(move.getPiece());
-        move.getFrom().clear();
     }
 
     public Cell findKing(Color colorToMove) {

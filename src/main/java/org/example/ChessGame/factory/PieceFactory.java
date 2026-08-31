@@ -32,10 +32,6 @@ public final class PieceFactory {
         }
     }
 
-    public static void viewGuide() {
-        System.out.println("Select piece by entering the value within the bracket: \nPawn(P) \nKnight(N) \nBishop(B) \nRook(R) \nQueen(Q)");
-    }
-
     public static PieceType pieceTypeResolver(String ch) throws IllegalPieceCreationException {
 
         switch (ch) {

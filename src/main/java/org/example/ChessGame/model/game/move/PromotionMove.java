@@ -18,7 +18,7 @@ public class PromotionMove extends Move {
         super(ctx);
         try (Scanner sc = new Scanner(System.in)) {
             System.out.println("Enter the Piece You want it to convert to: ");
-            PieceFactory.viewGuide();
+            System.out.println("Select piece by entering the value within the bracket: \nPawn(P) \nKnight(N) \nBishop(B) \nRook(R) \nQueen(Q)");
             String pieceType = sc.nextLine();
             this.promotedTo = PieceFactory.create(
                 PieceFactory.pieceTypeResolver(pieceType), 
@@ -28,7 +28,7 @@ public class PromotionMove extends Move {
     }
 
     @Override
-    public boolean isPatterLegal() {
+    public boolean isPatterLegal(Board board) {
         return true;
     }
     @Override

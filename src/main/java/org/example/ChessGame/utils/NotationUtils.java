@@ -20,6 +20,10 @@ public final class NotationUtils {
         return notation.charAt(1) - '1';
     }
 
+    public static int getIndex(Cell cell) {
+        return getIndex(cell.getRank(), cell.getFile());
+    }
+
     public static int getIndex(int row, int col) {
         return row * 8 + col;
     }
@@ -34,5 +38,18 @@ public final class NotationUtils {
         } catch (Exception e) {     // index out of bound
             return null;
         }
+    }
+
+    public static int checkDistance(int from, int to, int sizeOfTheBoard) {
+        int fromRow = from / sizeOfTheBoard;
+        int fromCol = from % sizeOfTheBoard;
+
+        int toRow = to / sizeOfTheBoard;
+        int toCol = to % sizeOfTheBoard;
+
+        return Math.max(
+            Math.abs(fromRow - toRow),
+            Math.abs(fromCol - toCol)
+        );
     }
 }

@@ -5,17 +5,12 @@ import org.example.ChessGame.model.board.Cell;
 import org.example.ChessGame.type.Color;
 import org.example.ChessGame.type.TacticType;
 
-import lombok.AllArgsConstructor;
+public final class GameStatusEvaluator {
 
-@AllArgsConstructor
-public class GameStatusEvaluator {
-    private final AttackDetector attackDetector;
-    private final MoveGenerator moveGenerator; // generates all legal moves for a color
-
-    public TacticType evaluate(Board board, Color colorToMove) {
+    public static TacticType evaluate(Board board, Color colorToMove) {
         Cell kingCell = board.findKing(colorToMove);
-        boolean inCheck = attackDetector.isAttacked(kingCell, opposite(colorToMove), board);
-        boolean hasLegalMove = moveGenerator.hasAnyLegalMove(colorToMove, board);
+        boolean inCheck = AttackDetector.isAttacked(kingCell, opposite(colorToMove), board);
+        boolean hasLegalMove = MoveGenerator.hasAnyLegalMove(colorToMove, board);
 
         if (inCheck && !hasLegalMove) return TacticType.CHECKMATE;
         if (!inCheck && !hasLegalMove) return TacticType.STALEMATE;
@@ -23,7 +18,7 @@ public class GameStatusEvaluator {
         return TacticType.NORMAL;
     }
 
-    public Color opposite(Color color){
+    private static Color opposite(Color color){
         return color == Color.BLACK ? Color.WHITE : Color.BLACK;
     }
 }

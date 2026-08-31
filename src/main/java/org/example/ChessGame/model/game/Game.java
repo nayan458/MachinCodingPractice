@@ -8,14 +8,15 @@ import java.util.Scanner;
 import org.example.ChessGame.factory.MoveFactory;
 import org.example.ChessGame.model.board.Board;
 import org.example.ChessGame.model.events.EventBus;
+import org.example.ChessGame.model.game.gameEvaluator.GameStatusEvaluator;
 import org.example.ChessGame.model.game.gameEvents.GameEvent;
-import org.example.ChessGame.model.game.gameEvents.MoveEvent;
 import org.example.ChessGame.model.game.move.Move;
 import org.example.ChessGame.model.game.rule.RuleValidator;
 import org.example.ChessGame.model.player.Player;
 import org.example.ChessGame.type.Color;
 import org.example.ChessGame.type.GameStatus;
-import org.example.ChessGame.type.MoveType;
+import org.example.ChessGame.type.TacticType;
+import org.example.ChessGame.utils.MoveTypeEvaluator;
 import org.example.ChessGame.utils.NotationUtils;
 
 public class Game {
@@ -49,6 +50,7 @@ public class Game {
         this.history.add(board.cloneObject());
         this.moveHistory = new ArrayList<>();
         this.moveHistory.add(null);
+        currentColor = Color.WHITE;
         this.status = GameStatus.ON_PROGRESS;
     }
 
@@ -68,38 +70,29 @@ public class Game {
         System.out.println(board);
     }
 
-    public void evaluateBoardStatus() {
-        // check if oponent is in check
-        // check for stalement
-        // check checkmate
+    public TacticType evaluateBoardStatus() {
+        return GameStatusEvaluator.evaluate(board, currentColor);
     }
 
     public void displayStatus() {
-        
+        System.out.println(this.status.toString());
+    }
+
+
+    public void resign() {
+        status = GameStatus.ENDED;
+        int winnerIndex = (currentPlayerIndex + 1) % 2;
+        winner = players.get(winnerIndex);
+        eventBus.publish(new GameEvent(players.get(currentPlayerIndex).getName() + " Regined and the winner is, " + winner.getName()));
     }
 
     public void makeMove() throws Exception {  // make a move
-        Color currentColor = players.get(currentPlayerIndex).getColor();
+        
         eventBus.publish(new GameEvent(currentColor + " TO MOVE: " + players.get(currentPlayerIndex).getName() + "'s turn"));
-        System.out.println("Please select the position of the piece to move: ");
-        System.out.println("Use U for undo and R to regine");
-        String moveMade = sc.nextLine();
 
-        if(moveMade.equals("U")) {
-            undo();
-            makeMove();
-        }
-
-        if(moveMade.equals("R")) {
-            status = GameStatus.ENDED;
-            int winnerIndex = (currentPlayerIndex + 1) % 2;
-            winner = players.get(winnerIndex);
-            eventBus.publish(new GameEvent(players.get(currentPlayerIndex).getName() + " Regined and the winner is, " + winner.getName()));
-            return;
-        }
-
-        String from = moveMade;
-        System.out.println("Please make a move: ");
+        System.out.println("Please select the position of the piece to move:");
+        String from = sc.nextLine();
+        System.out.println("Please select the position where you want to place the piece:");
         String to = sc.nextLine();
 
         GameContext ctx = new GameContext(
@@ -111,8 +104,12 @@ public class Game {
             moveHistory.getLast()
         );
 
-        ruleValidator.validate(ctx, board);
-        this.board.apply(MoveFactory.getMove(MoveType.NORMAL_MOVE, ctx));
+        Move move = MoveFactory.getMove(MoveTypeEvaluator.evaluateMoveType(ctx),ctx);
+        
+        ruleValidator.validate(move, board);
+
+        move.apply(board);
+        
         history.add(board.cloneObject());
         
         // eventBus.publish(new MoveEvent(new Move(players.get(currentPlayerIndex), null, null, null, to)));
@@ -120,7 +117,7 @@ public class Game {
 
     public void advanceTurn() {
         currentPlayerIndex = (currentPlayerIndex + 1) % 2;
-        Color currentColor = players.get(currentPlayerIndex).getColor();
+        this.currentColor = players.get(currentPlayerIndex).getColor();
         eventBus.publish(new GameEvent(currentColor + " TO MOVE: " + players.get(currentPlayerIndex).getName() + "'s turn") );
     }
 
