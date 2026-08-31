@@ -9,7 +9,9 @@ import org.example.ChessGame.factory.MoveFactory;
 import org.example.ChessGame.model.board.Board;
 import org.example.ChessGame.model.events.EventBus;
 import org.example.ChessGame.model.game.gameEvaluator.GameStatusEvaluator;
+import org.example.ChessGame.model.game.gameEvents.ErrorEvent;
 import org.example.ChessGame.model.game.gameEvents.GameEvent;
+import org.example.ChessGame.model.game.gameEvents.MoveEvent;
 import org.example.ChessGame.model.game.move.Move;
 import org.example.ChessGame.model.game.rule.RuleValidator;
 import org.example.ChessGame.model.player.Player;
@@ -147,8 +149,14 @@ public class Game {
         Move move = MoveFactory.getMove(MoveTypeEvaluator.evaluateMoveType(ctx),ctx);
 
         move.apply(board);
-        
+
+        eventBus.publish(new MoveEvent(move));
+
         history.add(board.cloneObject());
+    }
+
+    public void publishError(String message) {
+        eventBus.publish(new ErrorEvent(message));
     }
 
     public void advanceTurn() {

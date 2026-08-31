@@ -11,6 +11,7 @@ import org.example.ChessGame.model.board.StandardBoard;
 import org.example.ChessGame.model.events.EventBus;
 import org.example.ChessGame.model.events.SimpleEventBus;
 import org.example.ChessGame.model.game.Game;
+import org.example.ChessGame.model.game.gameEvents.ErrorEvent;
 import org.example.ChessGame.model.game.gameEvents.GameEvent;
 import org.example.ChessGame.model.game.gameEvents.MoveEvent;
 import org.example.ChessGame.model.game.rule.PatternLeagalityRule;
@@ -41,7 +42,11 @@ public class App {
         eventBus.subscribe(MoveEvent.class, p2);  // p2
         eventBus.subscribe(MoveEvent.class, logger);  // logger
 
-        
+        eventBus.subscribe(ErrorEvent.class, p1);  // p1
+        eventBus.subscribe(ErrorEvent.class, p2);  // p2
+        eventBus.subscribe(ErrorEvent.class, logger);  // logger
+
+
 
         List<Player> players = new ArrayList<>(List.of(p1,p2));
 
@@ -97,8 +102,7 @@ public class App {
             logger.displayLogs();
 
         } catch (Exception e) {
-            // notifyObserver(e.getMessage());
-            eventBus.publish(new GameEvent("ERROR: " + e.getMessage()));
+            eventBus.publish(new ErrorEvent(e.getMessage()));
         }
 
     }

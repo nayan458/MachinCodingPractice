@@ -11,21 +11,19 @@ public class GameController {
     private final GameService gameService;
 
     public void startGame(Game game) {
-
         try {
-           gameService.startGame(game); 
+           gameService.startGame(game);
            gameService.displayBoard(game);
         } catch (Exception e) {
-            System.out.println("UNKNOWN EXCEPTION: " + e);
+            // already reported to players/logger via ErrorEvent
         }
-
     }
 
     public void makeMove(Game game) {
         try {
             gameService.makeMove(game);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            // already reported to players/logger via ErrorEvent
         }
     }
 
@@ -33,7 +31,6 @@ public class GameController {
         try {
             return gameService.promptAction(game);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
             return "";
         }
     }
@@ -42,7 +39,7 @@ public class GameController {
         try {
             gameService.undo(game);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            // already reported to players/logger via ErrorEvent
         }
     }
 
@@ -50,23 +47,23 @@ public class GameController {
         try {
             gameService.resign(game);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            // already reported to players/logger via ErrorEvent
         }
     }
 
-    public void displayBoard(Game game) { 
+    public void displayBoard(Game game) {
         try {
             gameService.displayBoard(game);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            // already reported to players/logger via ErrorEvent
         }
     }
 
-    public void displayStatus(Game game) { 
+    public void displayStatus(Game game) {
         try {
             gameService.displayStatus(game);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            // already reported to players/logger via ErrorEvent
         }
     }
 
@@ -78,15 +75,15 @@ public class GameController {
         try {
             System.out.println(gameService.getResult(game));
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            // already reported to players/logger via ErrorEvent
         }
     }
 
-    public void viewReplay (Game game) { 
+    public void viewReplay (Game game) {
         try {
             gameService.viewReplay(game);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            // already reported to players/logger via ErrorEvent
         }
     }
 
