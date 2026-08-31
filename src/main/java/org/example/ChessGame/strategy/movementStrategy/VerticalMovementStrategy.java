@@ -29,7 +29,7 @@ public class VerticalMovementStrategy implements IMovementStrategy {
 
             Cell cell = NotationUtils.resolve(board, newRank, newFile);
 
-            while(!isValid(cell, from.getPiece().getColor())) {
+            while(isValid(cell, from.getPiece().getColor())) {
                 to.add(cell);
 
                 previous = cell;
@@ -45,8 +45,10 @@ public class VerticalMovementStrategy implements IMovementStrategy {
 
     @Override
     public boolean isValid(Cell cell, Color color) {
+        if (cell == null) {
+            return false;
+        }
         boolean valid = true;
-        valid &= cell != null;
         valid &= (cell.getPiece() == null || cell.getPiece().getColor() != color);
         valid &= (previous == null || previous.getPiece() == null);
         valid &= cell.getFile() == this.file;   // check is in same file;

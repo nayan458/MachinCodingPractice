@@ -30,8 +30,10 @@ public class LMovementStrategy implements IMovementStrategy {
 
     @Override
     public boolean isValid(Cell cell, Color color) {
+        if (cell == null) {
+            return false;
+        }
         boolean valid = true;
-        valid &= (cell != null);
         valid &= (cell.getPiece() == null || cell.getPiece().getColor() != color);
         return valid;
     }

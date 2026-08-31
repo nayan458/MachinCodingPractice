@@ -48,8 +48,10 @@ public class HorizontalMovementStrategy implements IMovementStrategy {
 
     @Override
     public boolean isValid(Cell cell, Color color) {
+        if (cell == null) {
+            return false;
+        }
         boolean valid = true;
-        valid &= cell != null;  // cell is not null
         valid &= (cell.getPiece() == null || cell.getPiece().getColor() != color);  // no same color piece
         valid &= (previousCell == null || previousCell.getPiece() == null);
         valid &= cell.getRank() == rank;    // check for same rank
