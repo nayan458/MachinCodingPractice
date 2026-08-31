@@ -24,14 +24,14 @@ public class Game {
     private final List<Player> players;
     private final RuleValidator ruleValidator;
     private final EventBus eventBus;
-    private Player winner;
+    private GameResult gameResult;
     private GameStatus status;
     private Integer currentPlayerIndex;
     private Scanner sc;
     private List<Board> history;
     private List<? extends Move> moveHistory;
     private Color currentColor;
-    
+
     // turn manager - (White moes first)
     // history
 
@@ -75,20 +75,42 @@ public class Game {
     }
 
     public TacticType evaluateBoardStatus() {
-        return GameStatusEvaluator.evaluate(board, currentColor);
+        Color colorToMove = opposite(currentColor);
+        TacticType tactic = GameStatusEvaluator.evaluate(board, colorToMove);
+
+        switch (tactic) {
+            case CHECKMATE -> endGame(tactic, players.get(currentPlayerIndex));
+            case STALEMATE, DRAW -> endGame(tactic, null);
+            default -> { /* game continues */ }
+        }
+
+        return tactic;
+    }
+
+    private void endGame(TacticType tactic, Player winner) {
+        this.gameResult = GameResult.of(tactic, winner);
+        this.status = GameStatus.ENDED;
+        eventBus.publish(new GameEvent(gameResult.toString()));
+    }
+
+    private Color opposite(Color color) {
+        return color == Color.WHITE ? Color.BLACK : Color.WHITE;
     }
 
     public void displayStatus() {
         System.out.println(this.status.toString());
     }
 
+    public GameResult getResult() {
+        return this.gameResult;
+    }
 
     public void resign() {
-        status = GameStatus.ENDED;
         int winnerIndex = (currentPlayerIndex + 1) % 2;
-        winner = players.get(winnerIndex);
-        eventBus.publish(new GameEvent(players.get(currentPlayerIndex).getName() + " Regined and the winner is, " + winner.getName()));
+        endGame(TacticType.REGINED, players.get(winnerIndex));
     }
+
+
 
     public void makeMove() throws Exception {  // make a move
         
@@ -115,8 +137,6 @@ public class Game {
         move.apply(board);
         
         history.add(board.cloneObject());
-        
-        // eventBus.publish(new MoveEvent(new Move(players.get(currentPlayerIndex), null, null, null, to)));
     }
 
     public void advanceTurn() {
@@ -133,10 +153,6 @@ public class Game {
             System.out.println(board);
             sc.nextLine();
         }
-    }
-
-    public void getListOfValidMove(String position){    // display list of moves for a selected position
-        
     }
 
     public static class GameBuilder {

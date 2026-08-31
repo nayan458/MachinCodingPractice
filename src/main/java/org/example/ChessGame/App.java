@@ -81,6 +81,7 @@ public class App {
             }
 
             gameController.displayStatus(game);
+            gameController.displayResult(game);
 
             gameController.viewReplay(game);
 

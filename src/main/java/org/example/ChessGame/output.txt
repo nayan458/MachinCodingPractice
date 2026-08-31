@@ -489,7 +489,6 @@ public abstract class Board implements Clonable<Board> {
         if(color == Color.WHITE)
             whiteCastelingRights.revokeQueenSideCastelingRight();
     }
-
     
 }
 
@@ -587,6 +586,14 @@ public class Cell implements Clonable<Cell> {
                 ", cellId='" + col + file + '\'' +
                 '}';
     }
+}
+
+
+===== ./model/game/GameResult.java =====
+package org.example.ChessGame.model.game;
+
+public class GameResult {
+    
 }
 
 
@@ -834,9 +841,8 @@ public class GameContext {
 ===== ./model/game/rule/RuleValidator.java =====
 package org.example.ChessGame.model.game.rule;
 
-import org.example.ChessGame.exception.gameRulesException.RuleViolationException;
 import org.example.ChessGame.model.board.Board;
-import org.example.ChessGame.model.game.move.Move;
+import org.example.ChessGame.model.game.GameContext;
 
 import lombok.AllArgsConstructor;
 
@@ -844,8 +850,8 @@ import lombok.AllArgsConstructor;
 public class RuleValidator {
     private final Rule rule;
 
-    public void validate(Move move, Board board) throws RuleViolationException {
-            rule.execute(move, board);
+    public void validate(GameContext ctx, Board board) throws Exception {
+            rule.execute(ctx, board);
     }
 }
 
@@ -855,16 +861,16 @@ package org.example.ChessGame.model.game.rule;
 
 import org.example.ChessGame.exception.gameRulesException.RuleViolationException;
 import org.example.ChessGame.model.board.Board;
-import org.example.ChessGame.model.game.move.Move;
+import org.example.ChessGame.model.game.GameContext;
 
 public class TurnCheckRule extends Rule {
     
     @Override
-    protected void validate(Move move, Board board) throws RuleViolationException {
+    protected void validate(GameContext ctx, Board board) throws RuleViolationException {
         
         System.out.println("Validator: Turn check rule triggered");
-        if(move.getPlayer().getColor() != move.getPiece().getColor())
-            throw new RuleViolationException("Validator:" + move.getPlayer().getColor().toString() + " turn to move.");
+        if(ctx.getPlayer().getColor() != ctx.getPiece().getColor())
+            throw new RuleViolationException("Validator:" + ctx.getPlayer().getColor().toString() + " turn to move.");
         System.out.println("Turn Check Rule: Passed ✅ ");
     }
 }
@@ -873,17 +879,23 @@ public class TurnCheckRule extends Rule {
 ===== ./model/game/rule/SelfCheckRule.java =====
 package org.example.ChessGame.model.game.rule;
 
+import org.example.ChessGame.exception.gameRulesException.IllegalMoveException;
 import org.example.ChessGame.exception.gameRulesException.RuleViolationException;
+import org.example.ChessGame.factory.MoveFactory;
 import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.game.GameContext;
 import org.example.ChessGame.model.game.gameEvaluator.AttackDetector;
 import org.example.ChessGame.model.game.move.Move;
+import org.example.ChessGame.utils.MoveTypeEvaluator;
 
 public class SelfCheckRule extends Rule {
 
     @Override
-    protected void validate(Move move, Board board) throws RuleViolationException {
+    protected void validate(GameContext ctx, Board board) throws RuleViolationException, IllegalMoveException {
         System.out.println("Validator: Self check rule triggered");
         Board original = board.cloneObject();
+
+        Move move = MoveFactory.getMove(MoveTypeEvaluator.evaluateMoveType(ctx),ctx);
         move.apply(board);
         if(AttackDetector.isAttacked(board.findKing(move.getPlayer().getColor()), move.getPlayer().getColor(), board)) {
             board = original;
@@ -900,13 +912,13 @@ package org.example.ChessGame.model.game.rule;
 
 import org.example.ChessGame.exception.gameRulesException.RuleViolationException;
 import org.example.ChessGame.model.board.Board;
-import org.example.ChessGame.model.game.move.Move;
+import org.example.ChessGame.model.game.GameContext;
 
 public class PieceExistanceRule extends Rule {
     @Override
-    protected void validate(Move move, Board board) throws RuleViolationException {
+    protected void validate(GameContext ctx, Board board) throws RuleViolationException {
         System.out.println("Validator: Piece Existance check rule triggered");
-        if(move.getFrom().getPiece() == null)
+        if(ctx.getFrom().getPiece() == null)
             throw new RuleViolationException("Cannot select a empty cell");
         System.out.println("Piece Existence Rule: Passed ✅ ");
     }
@@ -916,17 +928,23 @@ public class PieceExistanceRule extends Rule {
 ===== ./model/game/rule/PatternLeagalityRule.java =====
 package org.example.ChessGame.model.game.rule;
 
+import org.example.ChessGame.exception.gameRulesException.IllegalMoveException;
 import org.example.ChessGame.exception.gameRulesException.RuleViolationException;
+import org.example.ChessGame.factory.MoveFactory;
 import org.example.ChessGame.model.board.Board;
+import org.example.ChessGame.model.game.GameContext;
 import org.example.ChessGame.model.game.move.Move;
+import org.example.ChessGame.utils.MoveTypeEvaluator;
 
 // check if the piece can really move the way user have provided the move in. Is there any obstacale etc.
 
 public class PatternLeagalityRule extends Rule {
     @Override
-    protected void validate(Move move, Board board) throws RuleViolationException {
+    protected void validate(GameContext ctx, Board board) throws RuleViolationException, IllegalMoveException {
         System.out.println("Validator: Pattern Legality check rule triggered");
-        if(!move.isPatterLegal(board))
+        Move dummMove = MoveFactory.getMove(MoveTypeEvaluator.evaluateMoveType(ctx),ctx);
+
+        if(!dummMove.isPatterLegal(board))
             throw new RuleViolationException("Illegal piece movement.");
         System.out.println("Pattern Legality Rule: Passed ✅ ");
     }
@@ -938,7 +956,7 @@ package org.example.ChessGame.model.game.rule;
 
 import org.example.ChessGame.exception.gameRulesException.RuleViolationException;
 import org.example.ChessGame.model.board.Board;
-import org.example.ChessGame.model.game.move.Move;
+import org.example.ChessGame.model.game.GameContext;
 
 public abstract class Rule{
 
@@ -948,15 +966,15 @@ public abstract class Rule{
         this.nextRule = nextRule;
     }
 
-    public void execute(Move move, Board board) throws RuleViolationException {
-        validate(move, board);
-
+    public void execute(GameContext ctx, Board board) throws Exception {
+        validate(ctx, board);
         if(nextRule != null) {
-            nextRule.execute(move, board);
+
+            nextRule.execute(ctx, board);
         }
     }
 
-    protected abstract void validate(Move move, Board board) throws RuleViolationException;
+    protected abstract void validate(GameContext ctx, Board board) throws Exception;
 }
 
 
@@ -1195,15 +1213,13 @@ public class Game {
             moveHistory.getLast()
         );
 
+        ruleValidator.validate(ctx, board);
+
         Move move = MoveFactory.getMove(MoveTypeEvaluator.evaluateMoveType(ctx),ctx);
-        
-        ruleValidator.validate(move, board);
 
         move.apply(board);
         
         history.add(board.cloneObject());
-        
-        // eventBus.publish(new MoveEvent(new Move(players.get(currentPlayerIndex), null, null, null, to)));
     }
 
     public void advanceTurn() {
@@ -1220,10 +1236,6 @@ public class Game {
             System.out.println(board);
             sc.nextLine();
         }
-    }
-
-    public void getListOfValidMove(String position){    // display list of moves for a selected position
-        
     }
 
     public static class GameBuilder {
@@ -2112,8 +2124,10 @@ public class HorizontalMovementStrategy implements IMovementStrategy {
 
     @Override
     public boolean isValid(Cell cell, Color color) {
+        if (cell == null) {
+            return false;
+        }
         boolean valid = true;
-        valid &= cell != null;  // cell is not null
         valid &= (cell.getPiece() == null || cell.getPiece().getColor() != color);  // no same color piece
         valid &= (previousCell == null || previousCell.getPiece() == null);
         valid &= cell.getRank() == rank;    // check for same rank
@@ -2171,8 +2185,10 @@ public class LMovementStrategy implements IMovementStrategy {
 
     @Override
     public boolean isValid(Cell cell, Color color) {
+        if (cell == null) {
+            return false;
+        }
         boolean valid = true;
-        valid &= (cell != null);
         valid &= (cell.getPiece() == null || cell.getPiece().getColor() != color);
         return valid;
     }
@@ -2206,7 +2222,7 @@ public class DiagonalMovementStrategy implements IMovementStrategy{
 
             Cell cell = NotationUtils.resolve(board, newRank, newFile);
 
-            while(!isValid(cell, from.getPiece().getColor())) {
+            while(isValid(cell, from.getPiece().getColor())) {
                 to.add(cell);
                 
                 previous = cell;
@@ -2222,8 +2238,10 @@ public class DiagonalMovementStrategy implements IMovementStrategy{
 
     @Override
     public boolean isValid(Cell cell, Color color) {
+        if (cell == null) {
+            return false;
+        }
         boolean valid = true;
-        valid &= cell != null;
         valid &= (cell.getPiece() == null || cell.getPiece().getColor() != color);
         valid &= (previous == null || previous.getPiece() == null);
         return valid;
@@ -2318,7 +2336,7 @@ public class VerticalMovementStrategy implements IMovementStrategy {
 
             Cell cell = NotationUtils.resolve(board, newRank, newFile);
 
-            while(!isValid(cell, from.getPiece().getColor())) {
+            while(isValid(cell, from.getPiece().getColor())) {
                 to.add(cell);
 
                 previous = cell;
@@ -2334,8 +2352,10 @@ public class VerticalMovementStrategy implements IMovementStrategy {
 
     @Override
     public boolean isValid(Cell cell, Color color) {
+        if (cell == null) {
+            return false;
+        }
         boolean valid = true;
-        valid &= cell != null;
         valid &= (cell.getPiece() == null || cell.getPiece().getColor() != color);
         valid &= (previous == null || previous.getPiece() == null);
         valid &= cell.getFile() == this.file;   // check is in same file;

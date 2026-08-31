@@ -45,8 +45,16 @@ public class GameController {
         }
     }
 
-    public GameStatus getStatus (Game game) { 
-        return gameService.getStatus(game); 
+    public GameStatus getStatus (Game game) {
+        return gameService.getStatus(game);
+    }
+
+    public void displayResult (Game game) {
+        try {
+            System.out.println(gameService.getResult(game));
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     public void viewReplay (Game game) { 

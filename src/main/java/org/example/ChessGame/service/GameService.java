@@ -4,6 +4,7 @@ import java.util.Scanner;
 
 import org.example.ChessGame.exception.generals.InvalidGameException;
 import org.example.ChessGame.model.game.Game;
+import org.example.ChessGame.model.game.GameResult;
 import org.example.ChessGame.type.GameStatus;
 
 public class GameService {
@@ -38,6 +39,12 @@ public class GameService {
     }
 
     public GameStatus getStatus (Game game) { return game.getStatus(); }
+
+    public GameResult getResult (Game game) throws Exception {
+        if(game.getStatus() != GameStatus.ENDED)
+            throw new InvalidGameException();
+        return game.getResult();
+    }
 
     public void viewReplay (Game game) throws Exception {
         if(game.getStatus() != GameStatus.ENDED)
