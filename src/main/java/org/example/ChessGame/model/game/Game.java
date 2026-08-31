@@ -31,7 +31,7 @@ public class Game {
     private Integer currentPlayerIndex;
     private Scanner sc;
     private List<Board> history;
-    private List<? extends Move> moveHistory;
+    private List<Move> moveHistory;
     private Color currentColor;
 
     // turn manager - (White moes first)
@@ -75,6 +75,7 @@ public class Game {
 
     public void undo() {
         history.remove(history.size()-1);
+        moveHistory.remove(moveHistory.size()-1);
         this.board = history.get(history.size() - 1);
         currentPlayerIndex = (currentPlayerIndex + 1) % 2;
         this.currentColor = players.get(currentPlayerIndex).getColor();
@@ -153,6 +154,7 @@ public class Game {
         eventBus.publish(new MoveEvent(move));
 
         history.add(board.cloneObject());
+        moveHistory.add(move);
     }
 
     public void publishError(String message) {
