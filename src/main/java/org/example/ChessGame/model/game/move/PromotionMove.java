@@ -7,6 +7,7 @@ import org.example.ChessGame.factory.PieceFactory;
 import org.example.ChessGame.model.board.Board;
 import org.example.ChessGame.model.game.GameContext;
 import org.example.ChessGame.model.piece.Piece;
+import org.example.ChessGame.type.PieceType;
 
 import lombok.Getter;
 
@@ -29,11 +30,15 @@ public class PromotionMove extends Move {
 
     @Override
     public boolean isPatterLegal(Board board) {
+        if(promotedTo.getType() == PieceType.KING)
+            return false;
         return true;
     }
+
     @Override
     public void apply(Board board) {
-        
+        from.clear();
+        to.setPiece(promotedTo);    
     }
 
 }

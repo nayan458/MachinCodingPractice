@@ -77,8 +77,8 @@ public class PawnMovementStrategy implements IMovementStrategy {
 
         // Change these according to your board representation.
         return color == Color.WHITE
-                ? from.getRank() == 2
-                : from.getRank() == 7;
+                ? from.getRank() == 1
+                : from.getRank() == 6;
     }
 
     private boolean canCapture(Cell cell, Color color) {

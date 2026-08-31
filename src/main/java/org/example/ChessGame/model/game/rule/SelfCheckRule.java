@@ -9,8 +9,14 @@ public class SelfCheckRule extends Rule {
 
     @Override
     protected void validate(Move move, Board board) throws RuleViolationException {
-        if(AttackDetector.isAttacked(board.findKing(move.getPlayer().getColor()), move.getPlayer().getColor(), board))
-            throw new RuleViolationException("Illegal move, after the move your king is in check");
         System.out.println("Validator: Self check rule triggered");
+        Board original = board.cloneObject();
+        move.apply(board);
+        if(AttackDetector.isAttacked(board.findKing(move.getPlayer().getColor()), move.getPlayer().getColor(), board)) {
+            board = original;
+            throw new RuleViolationException("Illegal move, after the move your king is in check");
+        }
+        board = original;
+        System.out.println("Self check Rule: Passed ✅ ");
     }
 }

@@ -9,8 +9,9 @@ import org.example.ChessGame.model.game.move.Move;
 public class PatternLeagalityRule extends Rule {
     @Override
     protected void validate(Move move, Board board) throws RuleViolationException {
+        System.out.println("Validator: Pattern Legality check rule triggered");
         if(!move.isPatterLegal(board))
             throw new RuleViolationException("Illegal piece movement.");
-        System.out.println("Validator: Pattern Legality check rule triggered");
+        System.out.println("Pattern Legality Rule: Passed ✅ ");
     }
 }

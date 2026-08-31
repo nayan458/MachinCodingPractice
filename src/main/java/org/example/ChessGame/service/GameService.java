@@ -9,9 +9,9 @@ import org.example.ChessGame.type.GameStatus;
 public class GameService {
 
     public void startGame(Game game) throws Exception {
-        if(game.getStatus() != GameStatus.ON_PROGRESS)
+        if(game.getStatus() != GameStatus.READY_TO_PLAY)
             throw new Exception("Please check that the game is not ended or initialized correctly.");
-        makeMove(game);
+        game.setStatus(GameStatus.ON_PROGRESS);
     }
     
     public void makeMove(Game game) throws Exception {

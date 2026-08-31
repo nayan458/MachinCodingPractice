@@ -42,7 +42,8 @@ public class CastelingMove extends Move {
     }
     @Override
     public void apply(Board board) {
-
+        from.clear();
+        to.setPiece(piece);
     }
 
 }

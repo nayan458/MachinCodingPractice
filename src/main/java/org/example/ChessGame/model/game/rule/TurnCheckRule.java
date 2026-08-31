@@ -10,8 +10,8 @@ public class TurnCheckRule extends Rule {
     protected void validate(Move move, Board board) throws RuleViolationException {
         
         System.out.println("Validator: Turn check rule triggered");
-        
         if(move.getPlayer().getColor() != move.getPiece().getColor())
             throw new RuleViolationException("Validator:" + move.getPlayer().getColor().toString() + " turn to move.");
+        System.out.println("Turn Check Rule: Passed ✅ ");
     }
 }

@@ -1,7 +1,5 @@
 package org.example.ChessGame.controller;
 
-import org.example.ChessGame.exception.gameRulesException.IllegalMoveException;
-import org.example.ChessGame.exception.gameRulesException.RuleViolationException;
 import org.example.ChessGame.model.game.Game;
 import org.example.ChessGame.service.GameService;
 import org.example.ChessGame.type.GameStatus;
@@ -13,14 +11,12 @@ public class GameController {
     private final GameService gameService;
 
     public void startGame(Game game) {
+
         try {
            gameService.startGame(game); 
-        } catch (IllegalMoveException e) {
-            System.out.println(e.getMessage());
-        } catch (RuleViolationException e) {
-            System.out.println(e.getMessage());
+           gameService.displayBoard(game);
         } catch (Exception e) {
-            System.out.println("UNKNOWN EXCEPTION: " + e.getMessage());
+            System.out.println("UNKNOWN EXCEPTION: " + e);
         }
 
     }

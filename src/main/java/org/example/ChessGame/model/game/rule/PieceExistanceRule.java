@@ -7,8 +7,9 @@ import org.example.ChessGame.model.game.move.Move;
 public class PieceExistanceRule extends Rule {
     @Override
     protected void validate(Move move, Board board) throws RuleViolationException {
+        System.out.println("Validator: Piece Existance check rule triggered");
         if(move.getFrom().getPiece() == null)
             throw new RuleViolationException("Cannot select a empty cell");
-        System.out.println("Validator: Piece Existance check rule triggered");
+        System.out.println("Piece Existence Rule: Passed ✅ ");
     }
 }

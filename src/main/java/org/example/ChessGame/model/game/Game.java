@@ -51,11 +51,15 @@ public class Game {
         this.moveHistory = new ArrayList<>();
         this.moveHistory.add(null);
         currentColor = Color.WHITE;
-        this.status = GameStatus.ON_PROGRESS;
+        this.status = GameStatus.READY_TO_PLAY;
     }
 
     public void displayBoard() {
         System.out.println(board);
+    }
+
+    public void setStatus(GameStatus status) {
+        this.status = status;
     }
 
     public void start() {

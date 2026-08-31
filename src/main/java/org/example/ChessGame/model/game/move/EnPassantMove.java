@@ -25,6 +25,8 @@ public class EnPassantMove extends Move {
     }
     @Override
     public void apply(Board board) {
-        
+        previous.getTo().clear();
+        from.clear();
+        to.setPiece(piece);
     }
 }

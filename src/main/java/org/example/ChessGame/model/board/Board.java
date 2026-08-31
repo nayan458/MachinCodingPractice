@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.example.ChessGame.model.game.move.Move;
 import org.example.ChessGame.type.Color;
 import org.example.genericUtils.interfaces.Clonable;
 import org.example.ChessGame.model.piece.King;
@@ -64,4 +63,25 @@ public abstract class Board implements Clonable<Board> {
                 pieces.put(cell.getPiece(), cell);
         return pieces;
     }
+
+    public void revokeCastelingRights(Color color) {
+        revokeKingSideCastelingRights(color);
+        revokeQueenSideCastelingRights(color);
+    }
+
+    public void revokeKingSideCastelingRights(Color color) {
+        if(color == Color.BLACK)
+            blackCastelingRights.revokeKingSideCastelingRight();
+        if(color == Color.WHITE)
+            whiteCastelingRights.revokeKingSideCastelingRight();
+    }
+
+    public void revokeQueenSideCastelingRights(Color color) {
+        if(color == Color.BLACK)
+            blackCastelingRights.revokeQueenSideCastelingRight();
+        if(color == Color.WHITE)
+            whiteCastelingRights.revokeQueenSideCastelingRight();
+    }
+
+    
 }

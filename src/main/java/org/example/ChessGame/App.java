@@ -74,12 +74,10 @@ public class App {
             eventBus.publish(new GameEvent("Current Game State: " + game.getStatus()));
 
             gameController.startGame(game);
-            gameController.displayBoard(game);
-
 
             while(gameController.getStatus(game) == GameStatus.ON_PROGRESS) {
-                gameController.displayBoard(game);
                 gameController.makeMove(game);
+                gameController.displayBoard(game);
             }
 
             gameController.displayStatus(game);
