@@ -96,10 +96,20 @@ public class Game {
         switch (tactic) {
             case CHECKMATE -> endGame(tactic, players.get(currentPlayerIndex));
             case STALEMATE, DRAW -> endGame(tactic, null);
+            case CHECK -> announceCheck(colorToMove);
             default -> { /* game continues */ }
         }
 
         return tactic;
+    }
+
+    private void announceCheck(Color colorInCheck) {
+        Player playerInCheck = getPlayerByColor(colorInCheck);
+        eventBus.publish(new GameEvent(colorInCheck + " king is in CHECK! " + playerInCheck.getName() + " must respond."));
+    }
+
+    private Player getPlayerByColor(Color color) {
+        return players.get(0).getColor() == color ? players.get(0) : players.get(1);
     }
 
     private void endGame(TacticType tactic, Player winner) {
