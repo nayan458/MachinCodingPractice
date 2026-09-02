@@ -16,7 +16,7 @@ public class PatternLeagalityRule extends Rule {
         System.out.println("Validator: Pattern Legality check rule triggered");
         Move dummMove = MoveFactory.getMove(MoveTypeEvaluator.evaluateMoveType(ctx),ctx);
 
-        if(!dummMove.isPatterLegal(board))
+        if(!dummMove.isPatterLegal(board)) 
             throw new RuleViolationException("Illegal piece movement.");
         System.out.println("Pattern Legality Rule: Passed ✅ ");
     }
