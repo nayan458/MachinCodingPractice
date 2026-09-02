@@ -38,14 +38,5 @@ public class Queen extends Piece {
         return new Queen(this);
     }
 
-    @Override
-    public Set<Cell> getValidPositions(Cell from, Board board) {
-        Set<Cell> validPositions = new HashSet<>();
-        for(IMovementStrategy movementStrategie: movementStrategies)
-            validPositions.addAll(movementStrategie.getListOfMoves(from, board));
-        return validPositions;
-    }
-
-
     public String display(){ return getColor() == Color.BLACK ? "BQ" : "WQ";}
 }

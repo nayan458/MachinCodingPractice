@@ -6,6 +6,7 @@ import org.example.ChessGame.factory.MoveFactory;
 import org.example.ChessGame.model.board.Board;
 import org.example.ChessGame.model.board.Cell;
 import org.example.ChessGame.model.game.GameContext;
+import org.example.ChessGame.type.Color;
 import org.example.ChessGame.model.game.gameEvaluator.AttackDetector;
 import org.example.ChessGame.model.game.move.Move;
 import org.example.ChessGame.utils.MoveTypeEvaluator;
@@ -32,9 +33,14 @@ public class SelfCheckRule extends Rule {
 
         Move move = MoveFactory.getMove(MoveTypeEvaluator.evaluateMoveType(simulatedCtx), simulatedCtx);
         move.apply(simulation);
-        if(AttackDetector.isAttacked(simulation.findKing(move.getPlayer().getColor()), move.getPlayer().getColor(), simulation)) {
+        Color moverColor = move.getPlayer().getColor();
+        if(AttackDetector.isAttacked(simulation.findKing(moverColor), opposite(moverColor), simulation)) {
             throw new RuleViolationException("Illegal move, after the move your king is in check");
         }
         System.out.println("Self check Rule: Passed ✅ ");
+    }
+
+    private Color opposite(Color color) {
+        return color == Color.WHITE ? Color.BLACK : Color.WHITE;
     }
 }

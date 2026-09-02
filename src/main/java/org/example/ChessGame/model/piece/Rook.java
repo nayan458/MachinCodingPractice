@@ -45,14 +45,5 @@ public class Rook extends Piece {
 
     public boolean isMoved() { return this.isMoved; } 
 
-    @Override
-    public Set<Cell> getValidPositions(Cell from, Board board) {
-        Set<Cell> validPositions = new HashSet<>();
-        for(IMovementStrategy movementStrategie: movementStrategies)
-            validPositions.addAll(movementStrategie.getListOfMoves(from, board));
-        return validPositions;
-    }
-
-
     public String display(){ return getColor() == Color.BLACK ? "BR" : "WR";}
 }

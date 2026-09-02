@@ -11,6 +11,7 @@ public class NormalMove extends Move {
 
     @Override
     public boolean isPatterLegal(Board board) {
+        System.out.println(piece.getValidPositions(from, board));
         return piece.getValidPositions(from, board).contains(to);
     }
     @Override
