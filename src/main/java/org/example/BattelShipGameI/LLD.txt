@@ -1,0 +1,10 @@
+Game consist of GameBuilder, game builder validates all the configurations are provided properly, 
+App sets the configuration by providing it to the builder and then build function within the builder provide the object of the game by creating it properly.
+game contains list of move validations and are hence the validateMove exist within the game.
+apply move is contained by the board and it take the move and apply it to it.
+resolvePosition() goes to utill class as NotationUtils.
+markedAttacked(), makes the cell as ATTACKED and if any ship is there then we will call ship.hit, there for it should be there in the board, board check if ship exist and if exist, that is cell.getShip is no null then call the ship.hit() and it says "hit" and reduces the count of ship points.
+then board check if ship sunk function owned by ship and called by board and if yes then it updates remaing ship count. switchTurn is owned by game and called when a valid move is made or applied so once move.apply is done if it ends properly then switch the turn.
+Game — it knows the overall game state
+
+game will call the function after move is applied, board.getRemainingShipCount() and check if it is == 0 and if yes then game will call end() function. It will set the winning player, game status.
